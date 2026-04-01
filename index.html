@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>高中化學講義素材整合工作站_V14</title>
+    <title>高中化學講義素材整合工作站_V15</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
@@ -56,7 +56,6 @@
         .sync-indicator { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; margin-left: auto; transition: 0.3s; }
         .sync-active { background: #f39c12; color: #fff; }
         
-        /* 彈窗樣式優化 */
         .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; justify-content: center; align-items: center; padding: 20px; box-sizing: border-box; }
         .popup-card { background: #fff; width: 100%; max-width: 650px; max-height: 85vh; border-radius: 12px; padding: 25px; overflow-y: auto; position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .popup-close { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 24px; color: #999; transition: 0.3s; }
@@ -75,7 +74,7 @@
 <body>
 
 <div class="container">
-    <h1>🔬 高中化學講義素材整合工作站_V14</h1>
+    <h1>🔬 高中化學講義素材整合工作站_V15</h1>
     
     <div class="tabs">
         <div class="tab active" onclick="switchTab('single')">深度探索</div>
@@ -88,6 +87,7 @@
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
             <input type="text" id="chemName" placeholder="輸入中文或英文化學名稱 (如: 阿斯匹靈)..." onkeypress="if(event.key === 'Enter') searchSingle()">
             <button id="searchBtn" class="btn-primary" onclick="searchSingle()">解析</button>
+            <button class="btn-outline" onclick="clearSingle()">🗑️ 清空</button>
         </div>
         <div id="singleStatus" class="status"></div>
         
@@ -241,7 +241,7 @@
         }
     }
 
-    // ====== V14 核心：全新 API Key 管理系統 ======
+    // ====== API Key 管理系統 ======
     function openApiKeyModal() {
         document.getElementById('apiKeyValue').value = localStorage.getItem('gemini_api_key') || '';
         document.getElementById('apiOverlay').style.display = 'flex';
@@ -253,7 +253,7 @@
             localStorage.setItem('gemini_api_key', key);
             document.getElementById('apiOverlay').style.display = 'none';
             checkApiKeyStatus();
-            alert("✅ 金鑰已成功儲存！");
+            alert("✅ 金鑰已成功儲存！請再次點擊剛剛的操作。");
         } else {
             alert("請輸入有效的金鑰");
         }
@@ -329,6 +329,16 @@
     }
 
     // ====== 分頁 1：深度探索 ======
+    // V15 新增：一鍵清空功能
+    function clearSingle() {
+        document.getElementById('chemName').value = "";
+        document.getElementById('singleStatus').innerHTML = "";
+        document.getElementById('dashboardArea').style.display = "none";
+        currentCid = null;
+        currentName = "";
+        currentSmiles = "";
+    }
+
     async function searchSingle() {
         const name = document.getElementById('chemName').value.trim();
         const status = document.getElementById('singleStatus');
@@ -407,11 +417,11 @@
         } catch(e) { console.error(e); }
     }
 
-    // ====== AI 測驗生成與通用呼叫 ======
+    // ====== AI 測驗生成與通用呼叫 (V15 強化錯誤解析) ======
     function generateQuiz() {
         if(!currentCid && !currentSmiles) { alert("請先搜尋分子！"); return; }
         const prompt = `你是一位資深高中化學老師。請根據分子「${currentName} (SMILES: ${currentSmiles || '未知'})」，設計 3 題適合高中程度的選擇題（含核心概念、選項與正確答案解析）。請用繁體中文。`;
-        callGemini(prompt, 'quizContent', true); // true 代表是彈窗模式
+        callGemini(prompt, 'quizContent', true);
     }
 
     function generateQuizFromCanvas() {
@@ -423,7 +433,6 @@
     async function callGemini(prompt, resultBoxId, isModal = false) {
         const apiKey = localStorage.getItem('gemini_api_key');
         if(!apiKey) { 
-            // V14 智慧防呆：自動打開輸入框
             openApiKeyModal();
             return; 
         }
@@ -439,11 +448,26 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2 } })
             });
+            
+            // V15 核心修復：精準捕捉並拋出 Google 的退件原因
+            if(!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error?.message || `HTTP 錯誤碼: ${res.status}`);
+            }
+            
             const data = await res.json();
-            if(!res.ok) throw new Error("API 錯誤");
             resultBox.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
         } catch(e) {
-            resultBox.innerHTML = '<span style="color:red">❌ 運算失敗，請檢查金鑰或網路連線。</span>';
+            // 將真實錯誤印在畫面上
+            resultBox.innerHTML = `
+                <span style="color:red; font-weight:bold;">❌ 運算失敗：</span><br>
+                <span style="color:#c0392b;">${e.message}</span><br><br>
+                <span style="font-size:13px; color:#666; line-height: 1.6;">
+                <b>💡 系統提示（可能原因）：</b><br>
+                1. 您的 API 金鑰可能複製不完整或含有空白。<br>
+                2. 您使用的是學校或企業的 Google Workspace 帳號，網管預設關閉了 AI Studio 權限。<br>
+                3. 請點擊「設定金鑰」重新貼上，或嘗試用一般的 Gmail 帳號重新申請一組金鑰。
+                </span>`;
         }
     }
 
@@ -505,7 +529,7 @@
         } catch(e) { badge.className = "sync-indicator"; badge.style.background = "#e74c3c"; badge.innerHTML = "❌ 查無標準分子"; }
     }
     
-    // AI 視覺上傳
+    // AI 視覺上傳 (V15 強化錯誤解析)
     async function handleAIVisionUpload(event) {
         const file = event.target.files[0]; if(!file) return; event.target.value = '';
         const apiKey = localStorage.getItem('gemini_api_key');
@@ -524,15 +548,21 @@
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ contents: [{ parts: [{text: "辨識圖中化學分子，僅輸出SMILES代碼，不含markdown格式。失敗輸出ERROR。"}, {inline_data: {mime_type: file.type, data: b64.split(',')[1]}}] }] })
             });
+            
+            if(!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error?.message || "HTTP 錯誤");
+            }
+            
             const text = (await res.json()).candidates[0].content.parts[0].text.trim().replace(/```/g, '');
-            if(text==="ERROR" || !text) throw new Error();
+            if(text==="ERROR" || !text) throw new Error("影像無法辨識為化學結構");
             document.getElementById('externalSmiles').value = text;
             jsmeApplet.readGenericMolecularInput(text);
         } catch(e) { 
             syncBadge.className = "sync-indicator";
             syncBadge.style.background = "#e74c3c";
             syncBadge.innerHTML = "❌ 辨識失敗";
-            alert("辨識失敗，請確認圖片清晰度或金鑰是否正確。"); 
+            alert(`AI 辨識發生錯誤：\n${e.message}\n\n(提示：請確認您的 API 金鑰是否有效)`); 
         }
     }
 
@@ -600,7 +630,7 @@
         status.innerHTML += `<br><b>完成！成功 ${successCount}/${names.length} 筆。</b>`;
         if (successCount > 0) {
             zip.generateAsync({type:"blob"}).then(content => {
-                saveAs(content, "講義素材包_V14.zip");
+                saveAs(content, "講義素材包_V15.zip");
                 status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`;
                 btn.disabled = false;
             });
