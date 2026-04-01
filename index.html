@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>高中化學講義素材整合工作站_V8</title>
+    <title>高中化學講義素材整合工作站_V9</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
@@ -58,22 +58,23 @@
         .sync-idle { background: #bdc3c7; color: #fff; }
         .sync-active { background: #f39c12; color: #fff; box-shadow: 0 0 8px rgba(243, 156, 18, 0.5); }
         .sync-success { background: #2ecc71; color: #fff; }
+        .loading-text { color: #f39c12; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🔬 高中化學講義素材整合工作站_V8 (AI雙軌版)</h1>
+    <h1>🔬 高中化學講義素材整合工作站_V9 (完整修復版)</h1>
     
     <div class="tabs">
-        <div class="tab" onclick="switchTab('single')">深度探索 (已知搜尋)</div>
-        <div class="tab active" onclick="switchTab('draw')">AI 視覺與畫布 (核心)</div>
+        <div class="tab active" onclick="switchTab('single')">深度探索 (已知搜尋)</div>
+        <div class="tab" onclick="switchTab('draw')">AI 視覺與畫布 (核心)</div>
         <div class="tab" onclick="switchTab('batch')">批量生成 (講義打包)</div>
     </div>
 
-    <div id="single" class="tab-content">
+    <div id="single" class="tab-content active">
         <div class="input-group">
-            <input type="text" id="chemName" placeholder="輸入化學名稱 (如: 葡萄糖)..." onkeypress="if(event.key === 'Enter') searchSingle()">
+            <input type="text" id="chemName" placeholder="輸入中文或英文化學名稱 (如: 葡萄糖, 阿斯匹靈)..." onkeypress="if(event.key === 'Enter') searchSingle()">
             <button id="searchBtn" class="btn-primary" onclick="searchSingle()">解析與生成</button>
         </div>
         <div id="singleStatus" class="status"></div>
@@ -93,13 +94,13 @@
                     <tr><th>國際命名 (IUPAC)</th><td id="td_iupac">-</td></tr>
                     <tr><th>分子式 (Formula)</th><td id="td_formula">-</td></tr>
                     <tr><th>分子量 (Weight)</th><td id="td_weight">-</td></tr>
+                    <tr><th>SMILES 代碼</th><td id="td_smiles" style="word-break: break-all; font-family: monospace;">-</td></tr>
                 </table>
             </div>
         </div>
     </div>
 
-    <div id="draw" class="tab-content active">
-        
+    <div id="draw" class="tab-content">
         <div class="canvas-toolbar">
             <button class="btn-dark" onclick="setApiKey()" id="apiKeyBtn">🔑 設定 API 金鑰</button>
             <span style="border-left: 2px solid #bdc3c7; height: 20px; margin: 0 5px;"></span>
@@ -156,9 +157,10 @@
     </div>
 
     <div id="batch" class="tab-content">
-        <textarea id="batchInput" placeholder="例如：&#10;阿斯匹靈&#10;Benzene"></textarea>
-        <div style="text-align: right; margin-top: 10px;"><button id="batchBtn" class="btn-success" onclick="startBatch()">開始批量下載</button></div>
-        <div id="batchStatus" class="status"></div>
+        <p style="color: #555;">請輸入多個化學物質名稱（支援中文，每行一個），系統將自動為您抓取 2D 去背圖片並打包成 ZIP 檔。</p>
+        <textarea id="batchInput" placeholder="例如：&#10;阿斯匹靈&#10;葡萄糖&#10;Benzene"></textarea>
+        <div style="text-align: right; margin-top: 10px;"><button id="batchBtn" class="btn-success" onclick="startBatch()">開始批量打包下載</button></div>
+        <div id="batchStatus" class="status" style="color: var(--primary);"></div>
     </div>
 </div>
 
@@ -168,6 +170,7 @@
     
     let viewer3D_single = null, viewer3D_draw = null;
     let jsmeApplet = null, drawDebounceTimer = null; 
+    let currentCid = null, currentName = null;
 
     // ====== 初始化與 API Key 管理 ======
     window.onload = function() { checkApiKeyStatus(); }
@@ -198,17 +201,35 @@
         jsmeApplet.setCallBack("AfterStructureModified", onCanvasModified);
     }
 
-    // ====== V8 復原：手動匯入 SMILES ======
+    // ====== 畫布手動/自動功能 ======
     function injectSmilesToCanvas() {
         if (!jsmeApplet) return;
         const inputStr = document.getElementById('externalSmiles').value.trim();
         if(inputStr === "") { alert("請先輸入 SMILES 代碼！"); return; }
-        
-        // 將代碼載入畫布，這會自動觸發 AfterStructureModified 事件進行後續解析
         jsmeApplet.readGenericMolecularInput(inputStr);
     }
 
-    // ====== Gemini AI 視覺辨識處理 ======
+    function clearCanvas() {
+        if (jsmeApplet) jsmeApplet.reset();
+        document.getElementById('externalSmiles').value = "";
+        document.getElementById('syncStatus').innerHTML = "⚫ 準備就緒";
+        document.getElementById('syncStatus').className = "sync-indicator sync-idle";
+        document.getElementById('drawDashboardArea').style.opacity = "0.4";
+        document.getElementById('drawDashboardArea').style.pointerEvents = "none";
+    }
+
+    function onCanvasModified() {
+        const syncBadge = document.getElementById('syncStatus');
+        syncBadge.className = "sync-indicator sync-active";
+        syncBadge.innerHTML = "✏️ 畫布變更，準備同步...";
+        clearTimeout(drawDebounceTimer);
+        drawDebounceTimer = setTimeout(() => {
+            syncBadge.innerHTML = "🔄 正在連線查閱資料庫...";
+            analyzeCanvasRealTime();
+        }, 1200); 
+    }
+
+    // ====== AI 視覺辨識 ======
     async function handleAIVisionUpload(event) {
         const file = event.target.files[0];
         if (!file) return;
@@ -229,7 +250,6 @@
         try {
             const base64Data = await fileToBase64(file);
             const mimeType = file.type;
-
             const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             const payload = {
                 contents: [{
@@ -258,7 +278,6 @@
             }
 
             syncBadge.innerHTML = "✅ 辨識成功！匯入畫布中...";
-            // 將 AI 辨識出的 SMILES 同時填入輸入框，方便使用者查看與複製
             document.getElementById('externalSmiles').value = smilesCode;
             jsmeApplet.readGenericMolecularInput(smilesCode);
 
@@ -281,27 +300,7 @@
         });
     }
 
-    // ====== 畫布同步與其他邏輯 ======
-    function clearCanvas() {
-        if (jsmeApplet) jsmeApplet.reset();
-        document.getElementById('externalSmiles').value = "";
-        document.getElementById('syncStatus').innerHTML = "⚫ 準備就緒";
-        document.getElementById('syncStatus').className = "sync-indicator sync-idle";
-        document.getElementById('drawDashboardArea').style.opacity = "0.4";
-        document.getElementById('drawDashboardArea').style.pointerEvents = "none";
-    }
-
-    function onCanvasModified() {
-        const syncBadge = document.getElementById('syncStatus');
-        syncBadge.className = "sync-indicator sync-active";
-        syncBadge.innerHTML = "✏️ 畫布變更，準備同步...";
-        clearTimeout(drawDebounceTimer);
-        drawDebounceTimer = setTimeout(() => {
-            syncBadge.innerHTML = "🔄 正在連線查閱資料庫...";
-            analyzeCanvasRealTime();
-        }, 1200); 
-    }
-
+    // ====== 畫布同步解析 ======
     async function analyzeCanvasRealTime() {
         const dash = document.getElementById('drawDashboardArea');
         const syncBadge = document.getElementById('syncStatus');
@@ -337,6 +336,7 @@
         }
     }
 
+    // ====== UI 切換 ======
     function switchTab(tabId) {
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -344,11 +344,13 @@
         document.getElementById(tabId).classList.add('active');
     }
 
+    // ====== 核心共用功能 (V9 完整補回) ======
     async function fetchPropertiesData(cid) {
         try { const res = await fetch(`${PUBCHEM_API}/compound/cid/${cid}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,IUPACName/JSON`);
               if (res.ok) { const data = await res.json(); return data.PropertyTable.Properties[0]; }
         } catch (e) { return null; } return null;
     }
+
     async function render3DModel(cid, elementId, viewerInstanceRef) {
         const viewerDiv = document.getElementById(elementId);
         if (!window[viewerInstanceRef]) window[viewerInstanceRef] = $3Dmol.createViewer(viewerDiv, { backgroundColor: 'white' });
@@ -357,25 +359,154 @@
               if (res.ok) { viewer.addModel(await res.text(), "sdf"); viewer.setStyle({}, { stick: { radius: 0.15 }, sphere: { scale: 0.3 } }); viewer.zoomTo(); viewer.render(); }
         } catch (e) {}
     }
+
     async function downloadImage(imgElementId, fileNamePrefix) {
         const imgUrl = document.getElementById(imgElementId).src;
         try { const res = await fetch(imgUrl); saveAs(await res.blob(), `${fileNamePrefix}_2D.png`); } catch (e) {}
     }
+
+    // ====== 核心：維基百科中英文轉譯 (V9 完整補回) ======
+    async function translateViaWikipedia(chineseName) {
+        try {
+            const res = await fetch(WIKI_API + encodeURIComponent(chineseName));
+            const data = await res.json();
+            const pages = data.query.pages;
+            const pageId = Object.keys(pages)[0];
+            if (pageId !== "-1" && pages[pageId].langlinks) {
+                return pages[pageId].langlinks[0]['*'];
+            }
+            return null;
+        } catch (e) { return null; }
+    }
+
+    async function searchPubChemAPI(queryName) {
+        try {
+            const res = await fetch(`${PUBCHEM_API}/compound/name/${encodeURIComponent(queryName)}/cids/JSON`);
+            if (!res.ok) return null;
+            const data = await res.json();
+            return data.IdentifierList.CID[0];
+        } catch (e) { return null; }
+    }
+
+    async function smartGetCid(name, statusElementId) {
+        const status = document.getElementById(statusElementId);
+        
+        let cid = await searchPubChemAPI(name);
+        if (cid) return { cid: cid, finalName: name };
+
+        if (status) status.innerHTML = `⚠️ 直接查詢無果，正在透過維基百科智能轉譯「<span class="loading-text">${name}</span>」...`;
+        
+        const engName = await translateViaWikipedia(name);
+        if (engName) {
+            if (status) status.innerHTML = `✅ 成功轉譯為學名「<span class="loading-text">${engName}</span>」，正在獲取結構...`;
+            cid = await searchPubChemAPI(engName);
+            if (cid) return { cid: cid, finalName: engName };
+        }
+
+        return null;
+    }
+
+    // ====== 分頁 1：單一探索 (V9 完整補回) ======
     async function searchSingle() {
         const name = document.getElementById('chemName').value.trim();
-        if(!name) return;
-        const cidRes = await fetch(`${PUBCHEM_API}/compound/name/${encodeURIComponent(name)}/cids/JSON`);
-        if(cidRes.ok) {
-            const data = await cidRes.json();
-            const cid = data.IdentifierList.CID[0];
-            document.getElementById('td_queryname').textContent = name;
-            document.getElementById('chemImage').src = `${PUBCHEM_API}/compound/cid/${cid}/PNG?record_type=2d&image_size=large`;
-            document.getElementById('chemImage').style.display = "block";
-            document.getElementById('dashboardArea').style.display = "grid";
-            render3DModel(cid, 'viewer_3D', 'viewer3D_single');
-        } else { alert("查無資料"); }
+        const status = document.getElementById('singleStatus');
+        const dash = document.getElementById('dashboardArea');
+        const btn = document.getElementById('searchBtn');
+
+        if (!name) { status.textContent = "請輸入名稱！"; return; }
+
+        status.innerHTML = `🔄 正在連線資料庫查詢「<span class="loading-text">${name}</span>」...`;
+        status.style.color = "#333";
+        dash.style.display = "none";
+        btn.disabled = true;
+
+        const result = await smartGetCid(name, 'singleStatus');
+        
+        if (!result) {
+            status.textContent = `❌ 找不到「${name}」的資料，請確認名稱是否正確。`;
+            status.style.color = "#e74c3c";
+            btn.disabled = false;
+            return;
+        }
+
+        currentCid = result.cid;
+        currentName = result.finalName; 
+
+        document.getElementById('td_queryname').textContent = `${name} (解析為: ${currentName})`;
+
+        const img = document.getElementById('chemImage');
+        img.src = `${PUBCHEM_API}/compound/cid/${currentCid}/PNG?record_type=2d&image_size=large`;
+        img.style.display = "block";
+
+        render3DModel(currentCid, 'viewer_3D', 'viewer3D_single');
+        
+        const props = await fetchPropertiesData(currentCid);
+        if(props) {
+            document.getElementById('td_iupac').textContent = props.IUPACName || "無";
+            document.getElementById('td_formula').textContent = props.MolecularFormula || "無";
+            document.getElementById('td_weight').textContent = props.MolecularWeight ? props.MolecularWeight + " g/mol" : "無";
+            document.getElementById('td_smiles').textContent = props.CanonicalSMILES || "無";
+        }
+
+        status.innerHTML = `✅ 解析完成！(CID: ${currentCid})`;
+        status.style.color = "#2ecc71";
+        dash.style.display = "grid";
+        btn.disabled = false;
     }
-    async function startBatch() { alert("批量功能準備就緒。"); }
+
+    // ====== 分頁 3：批量打包下載 (V9 完整補回) ======
+    async function startBatch() {
+        const inputStr = document.getElementById('batchInput').value.trim();
+        const status = document.getElementById('batchStatus');
+        const btn = document.getElementById('batchBtn');
+
+        if (!inputStr) { status.textContent = "請輸入至少一個名稱！"; return; }
+
+        const names = inputStr.split('\n').map(n => n.trim()).filter(n => n.length > 0);
+        status.style.color = "var(--primary)";
+        status.innerHTML = `啟動批量處理任務，共計 ${names.length} 個項目...<br>`;
+        btn.disabled = true;
+
+        const zip = new JSZip();
+        const imgFolder = zip.folder("化學2D結構圖");
+        let successCount = 0;
+
+        for (let i = 0; i < names.length; i++) {
+            const name = names[i];
+            status.innerHTML += `[${i+1}/${names.length}] 正在解析：${name}... `;
+            
+            const result = await smartGetCid(name, null); 
+            
+            if (result && result.cid) {
+                try {
+                    const res = await fetch(`${PUBCHEM_API}/compound/cid/${result.cid}/PNG?record_type=2d&image_size=large`);
+                    if (res.ok) {
+                        const blob = await res.blob();
+                        imgFolder.file(`${name}.png`, blob); 
+                        status.innerHTML += `<span style="color:green;">成功 (對應: ${result.finalName})</span><br>`;
+                        successCount++;
+                    }
+                } catch (e) {
+                    status.innerHTML += `<span style="color:red;">圖片下載失敗</span><br>`;
+                }
+            } else {
+                status.innerHTML += `<span style="color:red;">找不到此物質</span><br>`;
+            }
+        }
+
+        status.innerHTML += `<br><b>處理完成！成功 ${successCount}/${names.length} 筆。正在產生 ZIP 壓縮檔...</b>`;
+
+        if (successCount > 0) {
+            zip.generateAsync({type:"blob"}).then(function(content) {
+                saveAs(content, "高中化學講義素材包_V9.zip");
+                status.innerHTML += `<br><span style="color:green;">✅ ZIP 檔案已自動下載！</span>`;
+                btn.disabled = false;
+            });
+        } else {
+            status.innerHTML += `<br><span style="color:red;">❌ 無成功項目，未產生 ZIP。</span>`;
+            btn.disabled = false;
+        }
+    }
 </script>
 
 </body>
