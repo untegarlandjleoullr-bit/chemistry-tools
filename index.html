@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>高中化學講義素材整合工作站_V24</title>
+    <title>高中化學講義素材整合工作站_V25</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
@@ -37,7 +37,6 @@
         .btn-danger { background-color: var(--danger); }
         .btn-outline { background-color: transparent; border: 2px solid #bdc3c7; color: #7f8c8d; }
 
-        /* V24 核心修復：使用 off-screen 替代 display: none */
         .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
         .off-screen { position: absolute !important; top: -9999px !important; left: -9999px !important; visibility: hidden; height: 0; overflow: hidden; margin: 0; }
         
@@ -86,7 +85,7 @@
 <body>
 
 <div class="container">
-    <h1>🔬 高中化學講義素材整合工作站_V24 (時事探究版)</h1>
+    <h1>🔬 高中化學講義素材整合工作站_V25 (全域智能版)</h1>
     
     <div class="tabs">
         <div class="tab active" onclick="switchTab('single')">深度探索</div>
@@ -99,7 +98,7 @@
 
     <div id="single" class="tab-content active">
         <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-            <input type="text" id="chemName" placeholder="輸入中文或英文化學名稱 (如: 阿斯匹靈)..." onkeypress="if(event.key === 'Enter') searchSingle()">
+            <input type="text" id="chemName" placeholder="輸入中文或英文化學名稱 (如: 蘇丹紅, 阿斯匹靈)..." onkeypress="if(event.key === 'Enter') searchSingle()">
             <button id="searchBtn" class="btn-primary" onclick="searchSingle()">解析</button>
             <button class="btn-outline" onclick="clearSingle()">🗑️ 清空</button>
         </div>
@@ -379,9 +378,24 @@
             if (!selectedModel && validModels.length > 0) selectedModel = validModels[0].split('/')[1];
             if (!selectedModel) selectedModel = 'gemini-2.5-flash';
 
-            cachedModelName = selectedModel;
-            return selectedModel;
+            cachedModelName = selectedModel; return selectedModel;
         } catch (e) { return 'gemini-2.5-flash'; }
+    }
+
+    // ====== V25 核心：AI 智能翻譯兜底引擎 ======
+    async function aiTranslateChemName(chineseName) {
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if (!apiKey) return null;
+        try {
+            const modelName = await getBestModel(apiKey);
+            const prompt = `將中文化學俗名或學名「${chineseName}」翻譯為 PubChem 資料庫可精確識別的單一英文學名或俗名 (例如輸入蘇丹紅，輸出 Sudan I)。請嚴格只輸出英文名稱，不要引號或任何解釋。若無法翻譯請輸出 ERROR。`;
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ contents: [{ parts: [{text: prompt}] }], generationConfig: { temperature: 0.1 } })
+            });
+            const text = (await res.json()).candidates[0].content.parts[0].text.trim();
+            return (text === "ERROR" || !text) ? null : text;
+        } catch(e) { return null; }
     }
 
     // ====== 中英轉譯 ======
@@ -401,32 +415,42 @@
             return (await res.json()).IdentifierList.CID[0];
         } catch (e) { return null; }
     }
+    
+    // V25 升級：三階段智能搜尋 (直接 -> Wikipedia -> AI 兜底)
     async function smartGetCid(name, statusElementId) {
         const status = document.getElementById(statusElementId);
         const isChinese = /[\u4e00-\u9fa5]/.test(name);
-        if (isChinese) {
-            if (status) status.innerHTML = `⚡ 偵測到中文，極速轉譯中...`;
-            const engName = await translateViaWikipedia(name);
-            if (engName) {
-                const cid = await searchPubChemAPI(engName);
-                if (cid) return { cid: cid, finalName: engName };
-            }
-        }
-        if (status && !isChinese) status.innerHTML = `🔄 資料庫查詢中...`;
-        let cid = await searchPubChemAPI(name);
-        if (cid) return { cid: cid, finalName: name };
+
+        // 階段一：英文直接查
         if (!isChinese) {
-            if (status) status.innerHTML = `⚠️ 嘗試跨語系轉譯...`;
-            const engName = await translateViaWikipedia(name);
-            if (engName) {
-                cid = await searchPubChemAPI(engName);
-                if (cid) return { cid: cid, finalName: engName };
+            if (status) status.innerHTML = `🔄 資料庫查詢中...`;
+            let cid = await searchPubChemAPI(name);
+            if (cid) return { cid: cid, finalName: name };
+        }
+
+        // 階段二：維基百科轉譯
+        if (status) status.innerHTML = `⚡ 維基百科轉譯中...`;
+        const engNameWiki = await translateViaWikipedia(name);
+        if (engNameWiki) {
+            const cid = await searchPubChemAPI(engNameWiki);
+            if (cid) return { cid: cid, finalName: engNameWiki };
+        }
+
+        // 階段三：V25 全新 AI 兜底轉譯 (解決「蘇丹紅」等廣義詞無法被維基精確對應的問題)
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if (apiKey) {
+            if (status) status.innerHTML = `🤖 啟動 AI 智能翻譯引擎...`;
+            const engNameAI = await aiTranslateChemName(name);
+            if (engNameAI) {
+                const cid = await searchPubChemAPI(engNameAI);
+                if (cid) return { cid: cid, finalName: engNameAI };
             }
         }
+
         return null;
     }
 
-    // ====== V24 核心功能：📰 時事探究 ======
+    // ====== 📰 時事探究 ======
     async function analyzeNews() {
         const keyword = document.getElementById('newsInput').value.trim();
         if(!keyword) { alert('請輸入時事關鍵字！'); return; }
@@ -447,7 +471,6 @@
         try {
             const modelName = await getBestModel(apiKey);
             
-            // Agent 1: 判定實體
             const prompt1 = `使用者查詢了時事議題「${keyword}」。請找出這個議題最核心相關的一種化學物質。請嚴格「只」回傳該物質的「英文常見俗名或學名」(例如: Ractopamine, Sudan I, Melamine)，不要任何引號或解釋。若此議題無關化學物質，請回傳 ERROR。`;
             const res1 = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
@@ -459,7 +482,6 @@
             if (chemNameEng.includes("ERROR") || !chemNameEng) throw new Error("無法判定相關化學物質");
             status.innerHTML = `🔍 判定為核心物質「${chemNameEng}」，正在抓取結構庫...`;
 
-            // 取 CID
             let cid = await searchPubChemAPI(chemNameEng);
             if (!cid) {
                  const translated = await translateViaWikipedia(chemNameEng);
@@ -467,28 +489,26 @@
             }
             if (!cid) throw new Error(`找不到「${chemNameEng}」的結構庫資料`);
 
-            // 繪製 2D & 3D
             document.getElementById('newsChemName').textContent = `${chemNameEng} (${keyword})`;
             document.getElementById('newsChemImage').src = `${PUBCHEM_API}/compound/cid/${cid}/PNG?record_type=2d&image_size=large`;
             
-            dash.classList.remove('off-screen'); // 顯示面板
+            dash.classList.remove('off-screen'); 
             load3DAsync(cid, 'viewer3D_news', 'viewer3D_news_ref');
 
-            // 取得 SMILES 供 Agent 2 參考
             const propsRes = await fetch(`${PUBCHEM_API}/compound/cid/${cid}/property/CanonicalSMILES/JSON`);
             let smiles = "";
             if(propsRes.ok) smiles = (await propsRes.json()).PropertyTable.Properties[0].CanonicalSMILES;
 
-            // Agent 2: 生成報紙與測驗
             status.innerHTML = `🤖 正在撰寫時事科學報與素養測驗...`;
             resultBox.innerHTML = '<span style="color:#f39c12">🔄 AI 撰寫中，請稍候...</span>';
 
+            // V25 擴充測驗：修改指令為設計 5 題
             const prompt2 = `你是一位資深高中化學老師。請針對時事議題「${keyword}」與其核心化學物質「${chemNameEng} (SMILES: ${smiles})」，撰寫一篇符合台灣108課綱素養精神的內容。
 請嚴格依照以下格式輸出：
 ### 📰 時事科學報
 (撰寫約 300 字的短文，介紹該事件背景、該物質的化學特性，以及為什麼會引起關注或危害)
 ### 📝 素養測驗
-(設計 2 題與此事件或物質相關的高中程度選擇題，並附上解答與詳細解析)
+(設計 5 題與此事件或物質相關的高中程度選擇題，並附上解答與詳細解析)
 請用繁體中文，排版美觀。`;
 
             const res2 = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
@@ -499,7 +519,6 @@
             const finalReport = (await res2.json()).candidates[0].content.parts[0].text;
             resultBox.innerHTML = finalReport.replace(/\n/g, '<br>');
             
-            // 賦值供儲存
             currentQuizContext.title = `📰 時事探究：${keyword}`;
             currentQuizContext.textContent = finalReport;
             btnSave.disabled = false;
@@ -518,7 +537,7 @@
     function clearSingle() {
         document.getElementById('chemName').value = "";
         document.getElementById('singleStatus').innerHTML = "";
-        document.getElementById('dashboardArea').classList.add('off-screen'); // V24 修復
+        document.getElementById('dashboardArea').classList.add('off-screen'); 
         currentCid = null; currentName = ""; currentSmiles = "";
         if(jsme_planar_single) jsme_planar_single.reset();
     }
@@ -547,7 +566,7 @@
         document.getElementById('td_smiles').textContent = "載入中...";
         document.getElementById('chemImage').src = `${PUBCHEM_API}/compound/cid/${currentCid}/PNG?record_type=2d&image_size=large`;
         
-        dash.classList.remove('off-screen'); // V24 修復：解除推移，恢復實體
+        dash.classList.remove('off-screen'); 
         status.innerHTML = `✅ 解析完成！`; status.style.color = "#2ecc71";
         btn.disabled = false;
 
@@ -590,7 +609,7 @@
 
     // ====== 題庫儲存與匯出 ======
     function exportBackupJSON() {
-        const data = { version: "V24", export_date: new Date().toLocaleString(), quiz_vault: JSON.parse(localStorage.getItem('quiz_vault') || '[]') };
+        const data = { version: "V25", export_date: new Date().toLocaleString(), quiz_vault: JSON.parse(localStorage.getItem('quiz_vault') || '[]') };
         saveAs(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), `Chemistry_Backup_${Date.now()}.json`);
     }
     function triggerBackupImport() { document.getElementById('backupUploader').click(); }
@@ -785,7 +804,7 @@
             const cid = (await res.json()).IdentifierList.CID[0];
             
             document.getElementById('td_draw_smiles').textContent = sm;
-            dash.classList.remove('off-screen'); // V24 修復
+            dash.classList.remove('off-screen'); 
             document.getElementById('drawChemImage').src = `${PUBCHEM_API}/compound/cid/${cid}/PNG?record_type=2d&image_size=large`;
             badge.className = "sync-indicator sync-success"; badge.innerHTML = "✅ 同步完成";
             
@@ -850,7 +869,7 @@
             } else { status.innerHTML += `<span style="color:red;">找不到</span><br>`; }
         }
         status.innerHTML += `<br><b>完成！成功 ${successCount}/${names.length} 筆。</b>`;
-        if (successCount > 0) { zip.generateAsync({type:"blob"}).then(content => { saveAs(content, "講義素材包_V24.zip"); status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`; btn.disabled = false; });
+        if (successCount > 0) { zip.generateAsync({type:"blob"}).then(content => { saveAs(content, "講義素材包_V25.zip"); status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`; btn.disabled = false; });
         } else { btn.disabled = false; }
     }
 </script>
