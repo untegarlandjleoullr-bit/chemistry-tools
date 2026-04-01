@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>高中化學講義素材整合工作站_V18</title>
+    <title>高中化學講義素材整合工作站_V19</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
@@ -15,7 +15,7 @@
         h1 { text-align: center; color: var(--primary); border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; font-size: 24px; }
         
         .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #ccc; flex-wrap: wrap; }
-        .tab { padding: 12px 15px; cursor: pointer; font-weight: bold; color: #7f8c8d; border-bottom: 3px solid transparent; transition: 0.3s; flex-grow: 1; text-align: center; white-space: nowrap; }
+        .tab { padding: 12px 10px; cursor: pointer; font-weight: bold; color: #7f8c8d; border-bottom: 3px solid transparent; transition: 0.3s; flex-grow: 1; text-align: center; white-space: nowrap; font-size: 15px;}
         .tab:hover { color: var(--secondary); }
         .tab.active { color: var(--secondary); border-bottom: 3px solid var(--secondary); }
         .tab-content { display: none; }
@@ -62,25 +62,37 @@
         .popup-close:hover { color: var(--danger); }
         .ai-result-box { background: #f4f6f7; border-left: 4px solid var(--ai); padding: 15px; border-radius: 4px; font-size: 15px; line-height: 1.6; min-height: 100px; white-space: pre-wrap;}
 
+        /* V19 題庫列表樣式 */
+        .vault-list { display: flex; flex-direction: column; gap: 15px; }
+        .vault-item { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .vault-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
+        .vault-title { font-weight: bold; color: var(--ai); font-size: 16px; }
+        .vault-date { font-size: 12px; color: #999; }
+        .vault-actions { display: flex; gap: 8px; }
+
         @media (max-width: 768px) {
             .dashboard, .canvas-layout { grid-template-columns: 1fr; }
             .card-full { grid-column: span 1; }
             .toolbar { flex-direction: column; align-items: stretch; }
             .toolbar > * { width: 100%; margin-left: 0 !important; }
             #jsme_container { height: 350px; }
+            .vault-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+            .vault-actions { width: 100%; }
+            .vault-actions button { flex: 1; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🔬 高中化學講義素材整合工作站_V18 (新世代AI)</h1>
+    <h1>🔬 高中化學素材工作站_V19 (數位資產版)</h1>
     
     <div class="tabs">
         <div class="tab active" onclick="switchTab('single')">深度探索</div>
-        <div class="tab" onclick="switchTab('draw')">AI 視覺與畫布</div>
-        <div class="tab" onclick="switchTab('calc')">進階運算 (AI)</div>
-        <div class="tab" onclick="switchTab('batch')">批量生成</div>
+        <div class="tab" onclick="switchTab('draw')">AI 與畫布</div>
+        <div class="tab" onclick="switchTab('calc')">進階運算</div>
+        <div class="tab" onclick="switchTab('vault'); loadVault();">📚 測驗題庫</div>
+        <div class="tab" onclick="switchTab('batch')">批量打包</div>
     </div>
 
     <div id="single" class="tab-content active">
@@ -174,6 +186,16 @@
             <div id="equationResult" class="ai-result-box">等待輸入反應式...</div>
         </div>
 
+        <div class="card card-full" style="margin-bottom: 20px;">
+            <h3 style="border-left-color: var(--warning); color: var(--warning);">⚖️ 限量試劑與產率引擎</h3>
+            <p style="color:#666; font-size:14px;">輸入反應物與各自的質量/莫耳數，找出限量試劑並計算理論產率。</p>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                <input type="text" id="limitingInput" placeholder="例: 10g H2 與 50g O2 反應生成 H2O">
+                <button class="btn-warning" onclick="analyzeLimitingReactant()">產率分析</button>
+            </div>
+            <div id="limitingResult" class="ai-result-box">等待輸入反應條件...</div>
+        </div>
+
         <div class="card card-full">
             <h3 style="border-left-color: var(--info); color: var(--info);">📊 元素質量百分比分析</h3>
             <p style="color:#666; font-size:14px;">輸入化學式或 SMILES，精算分子量與各元素質量占比。</p>
@@ -183,6 +205,15 @@
             </div>
             <div id="stoichResult" class="ai-result-box">等待輸入化學物質...</div>
         </div>
+    </div>
+
+    <div id="vault" class="tab-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <p style="color: #555; margin: 0;">這裡存放您由 AI 生成並儲存的所有測驗題目。資料安全地保存在您的瀏覽器中。</p>
+            <button class="btn-danger" onclick="clearVault()">⚠️ 清空所有題庫</button>
+        </div>
+        <div id="vaultList" class="vault-list">
+            </div>
     </div>
 
     <div id="batch" class="tab-content">
@@ -208,8 +239,11 @@
         <div class="popup-card" onclick="event.stopPropagation()">
             <span class="popup-close" onclick="document.getElementById('quizOverlay').style.display='none'">&times;</span>
             <h2 style="color: var(--ai); margin-top:0;">🤖 AI 化學隨堂測驗</h2>
-            <div id="quizContent" style="line-height: 1.6;">正在撰寫中...</div>
-            <div style="text-align: right; margin-top: 15px;"><button class="btn-primary" onclick="copyText('quizContent')">📋 複製題目</button></div>
+            <div id="quizContent" style="line-height: 1.6; margin-bottom: 15px; max-height: 50vh; overflow-y: auto; padding-right: 10px;">正在撰寫中...</div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; padding-top: 15px;">
+                <button class="btn-outline" onclick="copyText('quizContent')">📋 複製</button>
+                <button class="btn-ai" onclick="saveQuizToVault()" id="saveQuizBtn" disabled>💾 儲存至本機題庫</button>
+            </div>
         </div>
     </div>
 
@@ -230,8 +264,10 @@
     let viewer3D_single = null, viewer3D_draw = null;
     let jsmeApplet = null, drawDebounceTimer = null; 
     let currentCid = null, currentName = "", currentSmiles = "";
-    
     let cachedModelName = "";
+    
+    // V19 用於暫存當前生成的測驗標題與純文本內容
+    let currentQuizContext = { title: "", textContent: "" };
 
     window.onload = function() { 
         checkApiKeyStatus(); 
@@ -243,6 +279,7 @@
         }
     }
 
+    // ====== API Key 管理系統 ======
     function openApiKeyModal() {
         document.getElementById('apiKeyValue').value = localStorage.getItem('gemini_api_key') || '';
         document.getElementById('apiOverlay').style.display = 'flex';
@@ -282,10 +319,9 @@
         }
     }
 
-    // ====== V18 核心：新世代 AI 模型探索引擎 ======
+    // ====== AI 模型探索引擎 ======
     async function getBestModel(apiKey) {
         if (cachedModelName) return cachedModelName;
-        
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
             if (!res.ok) throw new Error("ListModels 失敗");
@@ -295,42 +331,21 @@
                 .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
                 .map(m => m.name);
 
-            // V18：全面升級至 2.0 / 2.5 世代模型優先
-            const preferred = [
-                'models/gemini-2.5-flash',
-                'models/gemini-2.5-pro',
-                'models/gemini-2.0-flash',
-                'models/gemini-2.0-pro-exp',
-                'models/gemini-1.5-flash', // 僅作為相容保留
-                'models/gemini-1.5-pro'
-            ];
+            const preferred = ['models/gemini-2.5-flash', 'models/gemini-2.5-pro', 'models/gemini-2.0-flash', 'models/gemini-1.5-pro'];
 
             let selectedModel = null;
             for (let p of preferred) {
-                if (validModels.includes(p)) {
-                    selectedModel = p.split('/')[1]; 
-                    break;
-                }
+                if (validModels.includes(p)) { selectedModel = p.split('/')[1]; break; }
             }
-            
-            // V18 防呆：如果優先清單全滅，直接抓取 API 授權的第一個可用模型
-            if (!selectedModel && validModels.length > 0) {
-                selectedModel = validModels[0].split('/')[1];
-            }
-            
-            // 若連可用清單都沒有，才給硬碟預設值
+            if (!selectedModel && validModels.length > 0) selectedModel = validModels[0].split('/')[1];
             if (!selectedModel) selectedModel = 'gemini-2.5-flash';
 
             cachedModelName = selectedModel;
-            console.log("🚀 自動探索引擎已鎖定模型：", selectedModel);
             return selectedModel;
-
-        } catch (e) {
-            console.warn("⚠️ 模型探索異常，退回預設", e);
-            return 'gemini-2.5-flash'; 
-        }
+        } catch (e) { return 'gemini-2.5-flash'; }
     }
 
+    // ====== 中英轉譯引擎 ======
     async function translateViaWikipedia(chineseName) {
         try {
             const res = await fetch(WIKI_API + encodeURIComponent(chineseName));
@@ -377,7 +392,7 @@
         return null;
     }
 
-    // ====== 分頁 1 ======
+    // ====== 分頁 1：深度探索 ======
     function clearSingle() {
         document.getElementById('chemName').value = "";
         document.getElementById('singleStatus').innerHTML = "";
@@ -449,29 +464,120 @@
         } catch(e) {}
     }
 
+    // ====== AI 測驗生成與管理 (V19 擴充) ======
     function generateQuiz() {
         if(!currentCid && !currentSmiles) { alert("請先搜尋分子！"); return; }
+        currentQuizContext.title = `主題測驗：${currentName}`;
         const prompt = `你是一位資深高中化學老師。請根據分子「${currentName} (SMILES: ${currentSmiles || '未知'})」，設計 3 題適合高中程度的選擇題（含核心概念、選項與正確答案解析）。請用繁體中文。`;
-        callGemini(prompt, 'quizContent', true);
+        callGemini(prompt, 'quizContent', true, true);
     }
 
     function generateQuizFromCanvas() {
         if(!jsmeApplet || !jsmeApplet.smiles()) { alert("畫布為空！"); return; }
+        currentQuizContext.title = `自訂畫布測驗：${jsmeApplet.smiles()}`;
         const prompt = `你是一位資深高中化學老師。請根據此 SMILES 代碼分子「${jsmeApplet.smiles()}」，設計 3 題適合高中程度的選擇題（含選項與正確答案解析）。請用繁體中文。`;
-        callGemini(prompt, 'quizContent', true);
+        callGemini(prompt, 'quizContent', true, true);
     }
 
-    async function callGemini(prompt, resultBoxId, isModal = false) {
+    // ====== V19 新增：題庫儲存與匯出機制 ======
+    function saveQuizToVault() {
+        if (!currentQuizContext.textContent) return;
+        
+        let vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
+        const newQuiz = {
+            id: Date.now().toString(),
+            date: new Date().toLocaleString(),
+            title: currentQuizContext.title,
+            content: currentQuizContext.textContent
+        };
+        
+        vault.unshift(newQuiz); // 放最前面
+        localStorage.setItem('quiz_vault', JSON.stringify(vault));
+        
+        alert("✅ 測驗已成功儲存至本機題庫！");
+        document.getElementById('quizOverlay').style.display = 'none';
+        
+        // 如果目前在題庫頁籤，就重新整理列表
+        if(document.getElementById('vault').classList.contains('active')) {
+            loadVault();
+        }
+    }
+
+    function loadVault() {
+        const vaultList = document.getElementById('vaultList');
+        const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
+        
+        if (vault.length === 0) {
+            vaultList.innerHTML = '<div style="text-align:center; padding: 40px; color: #999;">📭 目前題庫是空的。<br>請先透過 AI 生成測驗並點擊「儲存至題庫」。</div>';
+            return;
+        }
+
+        let html = '';
+        vault.forEach(quiz => {
+            // 預覽前 100 個字
+            const preview = quiz.content.substring(0, 100).replace(/\n/g, ' ') + '...';
+            html += `
+                <div class="vault-item" id="quiz-${quiz.id}">
+                    <div class="vault-header">
+                        <div>
+                            <div class="vault-title">${quiz.title}</div>
+                            <div class="vault-date">建立時間：${quiz.date}</div>
+                        </div>
+                        <div class="vault-actions">
+                            <button class="btn-success" onclick="exportQuiz('${quiz.id}')">⬇️ 匯出 TXT</button>
+                            <button class="btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="deleteQuiz('${quiz.id}')">刪除</button>
+                        </div>
+                    </div>
+                    <div style="font-size: 14px; color: #666; line-height: 1.5; background: #f8f9fa; padding: 10px; border-radius: 4px;">
+                        ${preview}
+                    </div>
+                </div>
+            `;
+        });
+        vaultList.innerHTML = html;
+    }
+
+    function exportQuiz(id) {
+        const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
+        const quiz = vault.find(q => q.id === id);
+        if (!quiz) return;
+
+        // 加上檔頭資訊
+        const fileContent = `=================================\n【${quiz.title}】\n產生時間：${quiz.date}\n=================================\n\n${quiz.content}`;
+        
+        const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
+        saveAs(blob, `${quiz.title}_測驗卷.txt`);
+    }
+
+    function deleteQuiz(id) {
+        if(!confirm("確定要刪除這筆測驗紀錄嗎？")) return;
+        let vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
+        vault = vault.filter(q => q.id !== id);
+        localStorage.setItem('quiz_vault', JSON.stringify(vault));
+        loadVault();
+    }
+
+    function clearVault() {
+        if(!confirm("⚠️ 警告：確定要清空所有儲存的題庫嗎？此操作無法復原！")) return;
+        localStorage.removeItem('quiz_vault');
+        loadVault();
+    }
+
+    // ====== 通用 AI 呼叫 ======
+    async function callGemini(prompt, resultBoxId, isModal = false, isQuiz = false) {
         const apiKey = localStorage.getItem('gemini_api_key');
         if(!apiKey) { openApiKeyModal(); return; }
         
-        if(isModal) document.getElementById('quizOverlay').style.display = "flex";
+        const btnSave = document.getElementById('saveQuizBtn');
+        if(isModal) {
+            document.getElementById('quizOverlay').style.display = "flex";
+            if(btnSave) btnSave.disabled = true;
+        }
         
         const resultBox = document.getElementById(resultBoxId);
         resultBox.innerHTML = '<span style="color:#f39c12">🔄 正在偵測可用 AI 模型...</span>';
         
         try {
-            // 動態取得模型
             const modelName = await getBestModel(apiKey);
             resultBox.innerHTML = `<span style="color:#f39c12">🔄 模型鎖定 (${modelName})，高速運算中...</span>`;
             
@@ -487,20 +593,36 @@
             }
             
             const data = await res.json();
-            resultBox.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
+            const textResponse = data.candidates[0].content.parts[0].text;
+            
+            resultBox.innerHTML = textResponse.replace(/\n/g, '<br>');
+            
+            // 若是測驗生成，則解鎖儲存按鈕並暫存純文本
+            if(isQuiz) {
+                currentQuizContext.textContent = textResponse;
+                if(btnSave) btnSave.disabled = false;
+            }
+
         } catch(e) {
-            // V18 修正：防呆捕捉，避免破圖
             resultBox.innerHTML = `
                 <span style="color:red; font-weight:bold;">❌ 運算失敗：</span><br>
                 <span style="color:#c0392b; font-size: 13px;">${e.message}</span>`;
         }
     }
 
+    // ====== 進階運算 (V19 新增限量試劑) ======
     function solveEquation() {
         const eq = document.getElementById('equationInput').value.trim();
         if(!eq) return;
         const prompt = `你是一個專業的化學平衡引擎。請平衡以下化學反應式：[ ${eq} ]。\n請嚴格依照以下格式輸出：\n1. **平衡反應式**：(寫出正確係數)\n2. **反應類型**：(如氧化還原、酸鹼中和等)\n3. **細部解析**：(說明各原子的氧化數變化或平衡邏輯)。請用繁體中文。`;
         callGemini(prompt, 'equationResult');
+    }
+
+    function analyzeLimitingReactant() {
+        const item = document.getElementById('limitingInput').value.trim();
+        if(!item) return;
+        const prompt = `你是一個化學計量精算師。針對以下反應情境：[ ${item} ]。\n請依照以下步驟進行運算並輸出：\n1. **反應方程式**：(請先寫出配平的反應式)\n2. **莫耳數換算**：(列出各反應物的莫耳數計算過程)\n3. **限量試劑判定**：(指出何者為限量試劑，並說明判斷邏輯)\n4. **理論產率計算**：(計算主要產物的理論生成量，附單位)。請用繁體中文排版清楚。`;
+        callGemini(prompt, 'limitingResult');
     }
 
     function analyzeStoichiometry() {
@@ -510,6 +632,7 @@
         callGemini(prompt, 'stoichResult');
     }
 
+    // ====== 畫布邏輯 ======
     function jsmeOnLoad() { 
         jsmeApplet = new JSApplet.JSME("jsme_container", "100%", "100%", { options: "newlook,star,nosmiles" });
         jsmeApplet.setCallBack("AfterStructureModified", onCanvasModified);
@@ -552,6 +675,7 @@
         } catch(e) { badge.className = "sync-indicator"; badge.style.background = "#e74c3c"; badge.innerHTML = "❌ 查無標準分子"; }
     }
     
+    // AI 視覺上傳
     async function handleAIVisionUpload(event) {
         const file = event.target.files[0]; if(!file) return; event.target.value = '';
         const apiKey = localStorage.getItem('gemini_api_key');
@@ -570,13 +694,9 @@
                 body: JSON.stringify({ contents: [{ parts: [{text: "辨識圖中化學分子，僅輸出SMILES代碼，不含markdown格式。失敗輸出ERROR。"}, {inline_data: {mime_type: file.type, data: b64.split(',')[1]}}] }] })
             });
             
-            if(!res.ok) {
-                const errData = await res.json();
-                throw new Error(errData.error?.message || "HTTP 錯誤");
-            }
-            
+            if(!res.ok) throw new Error("HTTP 錯誤");
             const text = (await res.json()).candidates[0].content.parts[0].text.trim().replace(/```/g, '');
-            if(text==="ERROR" || !text) throw new Error("影像無法辨識為化學結構");
+            if(text==="ERROR" || !text) throw new Error("無法辨識為化學結構");
             document.getElementById('externalSmiles').value = text;
             jsmeApplet.readGenericMolecularInput(text);
         } catch(e) { 
@@ -587,6 +707,7 @@
         }
     }
 
+    // ====== 輔助功能 ======
     function showAR() {
         if (window.location.protocol === 'file:') {
             alert("【本機防呆提示】\nAR 投影需要將網頁上傳到網路上 (例如 GitHub Pages)。\n您目前在桌面開啟 (file:///)，手機無法掃描連線您的硬碟喔！");
@@ -650,7 +771,7 @@
         status.innerHTML += `<br><b>完成！成功 ${successCount}/${names.length} 筆。</b>`;
         if (successCount > 0) {
             zip.generateAsync({type:"blob"}).then(content => {
-                saveAs(content, "講義素材包_V18.zip");
+                saveAs(content, "講義素材包_V19.zip");
                 status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`;
                 btn.disabled = false;
             });
