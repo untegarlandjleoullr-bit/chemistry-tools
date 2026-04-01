@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>高中化學講義素材整合工作站_V15</title>
+    <title>高中化學講義素材整合工作站_V16</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
@@ -74,7 +74,7 @@
 <body>
 
 <div class="container">
-    <h1>🔬 高中化學講義素材整合工作站_V15</h1>
+    <h1>🔬 高中化學講義素材整合工作站_V16</h1>
     
     <div class="tabs">
         <div class="tab active" onclick="switchTab('single')">深度探索</div>
@@ -329,7 +329,6 @@
     }
 
     // ====== 分頁 1：深度探索 ======
-    // V15 新增：一鍵清空功能
     function clearSingle() {
         document.getElementById('chemName').value = "";
         document.getElementById('singleStatus').innerHTML = "";
@@ -417,7 +416,7 @@
         } catch(e) { console.error(e); }
     }
 
-    // ====== AI 測驗生成與通用呼叫 (V15 強化錯誤解析) ======
+    // ====== AI 測驗生成與通用呼叫 (V16 API URL 修復) ======
     function generateQuiz() {
         if(!currentCid && !currentSmiles) { alert("請先搜尋分子！"); return; }
         const prompt = `你是一位資深高中化學老師。請根據分子「${currentName} (SMILES: ${currentSmiles || '未知'})」，設計 3 題適合高中程度的選擇題（含核心概念、選項與正確答案解析）。請用繁體中文。`;
@@ -443,13 +442,13 @@
         resultBox.innerHTML = '<span style="color:#f39c12">🔄 AI 正在高速運算中，請稍候...</span>';
         
         try {
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            // V16 核心修正：將模型變更為 gemini-1.5-flash-latest，解決 404 not found 問題
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2 } })
             });
             
-            // V15 核心修復：精準捕捉並拋出 Google 的退件原因
             if(!res.ok) {
                 const errData = await res.json();
                 throw new Error(errData.error?.message || `HTTP 錯誤碼: ${res.status}`);
@@ -458,15 +457,12 @@
             const data = await res.json();
             resultBox.innerHTML = data.candidates[0].content.parts[0].text.replace(/\n/g, '<br>');
         } catch(e) {
-            // 將真實錯誤印在畫面上
             resultBox.innerHTML = `
                 <span style="color:red; font-weight:bold;">❌ 運算失敗：</span><br>
                 <span style="color:#c0392b;">${e.message}</span><br><br>
                 <span style="font-size:13px; color:#666; line-height: 1.6;">
-                <b>💡 系統提示（可能原因）：</b><br>
-                1. 您的 API 金鑰可能複製不完整或含有空白。<br>
-                2. 您使用的是學校或企業的 Google Workspace 帳號，網管預設關閉了 AI Studio 權限。<br>
-                3. 請點擊「設定金鑰」重新貼上，或嘗試用一般的 Gmail 帳號重新申請一組金鑰。
+                <b>💡 系統提示：</b><br>
+                若您持續看到此錯誤，請確認金鑰是否完整，或嘗試改用個人 Gmail 申請的新金鑰。
                 </span>`;
         }
     }
@@ -529,7 +525,7 @@
         } catch(e) { badge.className = "sync-indicator"; badge.style.background = "#e74c3c"; badge.innerHTML = "❌ 查無標準分子"; }
     }
     
-    // AI 視覺上傳 (V15 強化錯誤解析)
+    // AI 視覺上傳 (V16 API URL 修復)
     async function handleAIVisionUpload(event) {
         const file = event.target.files[0]; if(!file) return; event.target.value = '';
         const apiKey = localStorage.getItem('gemini_api_key');
@@ -544,7 +540,8 @@
         
         try {
             const b64 = await new Promise(r => { const rd=new FileReader(); rd.onload=()=>r(rd.result); rd.readAsDataURL(file); });
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+            // V16 核心修正
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ contents: [{ parts: [{text: "辨識圖中化學分子，僅輸出SMILES代碼，不含markdown格式。失敗輸出ERROR。"}, {inline_data: {mime_type: file.type, data: b64.split(',')[1]}}] }] })
             });
@@ -630,7 +627,7 @@
         status.innerHTML += `<br><b>完成！成功 ${successCount}/${names.length} 筆。</b>`;
         if (successCount > 0) {
             zip.generateAsync({type:"blob"}).then(content => {
-                saveAs(content, "講義素材包_V15.zip");
+                saveAs(content, "講義素材包_V16.zip");
                 status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`;
                 btn.disabled = false;
             });
