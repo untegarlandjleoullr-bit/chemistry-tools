@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>高中化學講義素材整合工作站_V21</title>
+    <title>高中化學講義素材整合工作站_V22</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
@@ -85,7 +85,7 @@
 <body>
 
 <div class="container">
-    <h1>🔬 高中化學講義素材整合工作站_V21 (課綱素養版)</h1>
+    <h1>🔬 高中化學講義素材整合工作站_V22 (氣體動力版)</h1>
     
     <div class="tabs">
         <div class="tab active" onclick="switchTab('single')">深度探索</div>
@@ -110,9 +110,9 @@
                 <div style="text-align: center; margin-top: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
                     <button class="btn-success" onclick="downloadImage('chemImage', currentName)">⬇️ 下載圖片</button>
                     <select id="quizDifficultySingle" style="padding: 10px; border-radius: 6px;">
-                        <option value="基礎 (著重化學名詞定義、基本觀念與基礎性質記憶)">🟢 基礎題</option>
-                        <option value="中等 (著重基礎計算、簡單情境應用與圖表分析)" selected>🟡 中等題</option>
-                        <option value="進階 (完全符合108課綱素養導向，著重跨單元整合、長文閱讀理解與實驗探究情境)">🔴 進階素養題</option>
+                        <option value="基礎 (著重名詞定義、基本觀念)">🟢 基礎題</option>
+                        <option value="中等 (著重基礎計算、情境應用)" selected>🟡 中等題</option>
+                        <option value="進階 (符合108課綱素養，著重跨單元與探究)">🔴 進階素養題</option>
                     </select>
                     <button class="btn-ai" onclick="generateQuiz()">🤖 生成測驗</button>
                 </div>
@@ -140,7 +140,7 @@
         <div class="toolbar">
             <button class="btn-dark" onclick="openApiKeyModal()" id="apiKeyBtn">🔑 設定金鑰</button>
             <button class="btn-info" onclick="document.getElementById('aiVisionUploader').click()">✨ AI 圖片辨識</button>
-            <input type="text" id="externalSmiles" placeholder="或貼上 SMILES 匯入..." style="flex:1; min-width:150px; margin:0;">
+            <input type="text" id="externalSmiles" placeholder="貼上 SMILES、名稱或化學式..." style="flex:1; min-width:150px; margin:0;">
             <button class="btn-warning" onclick="injectSmilesToCanvas()">匯入</button>
             <button class="btn-outline" onclick="clearCanvas()">🗑️ 清空</button>
             <span id="syncStatus" class="sync-indicator" style="background:#bdc3c7;color:#fff;">⚫ 準備就緒</span>
@@ -152,8 +152,8 @@
             <div class="guide-panel">
                 <h4 style="color:#d35400; margin-top:0;">✨ 雙軌操作指南</h4>
                 <p><b>AI 辨識：</b>設定金鑰後，上傳圖片，AI 會自動畫出結構。</p>
+                <p><b>智慧匯入：</b>上方欄位可直接輸入「化學式 (如: C6H12O6)」或「SMILES」，系統會自動轉換為結構！</p>
                 <p><b>手動畫布：</b>先畫骨架(─)，再點擊線條變雙鍵(═)，最後點選原子(O)替換端點。</p>
-                <p><b>測驗生成：</b>畫完結構後，點擊下方「🤖 生成測驗」即可命題。</p>
             </div>
         </div>
 
@@ -164,9 +164,9 @@
                 <div style="text-align: center; margin-top: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
                     <button class="btn-success" onclick="downloadImage('drawChemImage', '自訂分子')">⬇️ 下載圖片</button>
                     <select id="quizDifficultyDraw" style="padding: 10px; border-radius: 6px;">
-                        <option value="基礎 (著重化學名詞定義、基本觀念與基礎性質記憶)">🟢 基礎題</option>
-                        <option value="中等 (著重基礎計算、簡單情境應用與圖表分析)" selected>🟡 中等題</option>
-                        <option value="進階 (完全符合108課綱素養導向，著重跨單元整合、長文閱讀理解與實驗探究情境)">🔴 進階素養題</option>
+                        <option value="基礎 (著重名詞定義、基本觀念)">🟢 基礎題</option>
+                        <option value="中等 (著重基礎計算、情境應用)" selected>🟡 中等題</option>
+                        <option value="進階 (符合108課綱素養，著重跨單元與探究)">🔴 進階素養題</option>
                     </select>
                     <button class="btn-ai" onclick="generateQuizFromCanvas()">🤖 生成測驗</button>
                 </div>
@@ -186,6 +186,18 @@
     </div>
 
     <div id="calc" class="tab-content">
+        
+        <div class="card card-full" style="margin-bottom: 20px;">
+            <h3 style="border-left-color: #3498db; color: #3498db;">🎈 理想氣體方程式引擎 (PV=nRT)</h3>
+            <p style="color:#666; font-size:14px;">輸入氣體條件，AI 將自動解析變數並給出完整計算步驟與觀念解說。</p>
+            <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                <input type="text" id="gasInput" placeholder="例：在 27°C、1 atm 下，2 莫耳的氣體體積為多少？">
+                <button class="btn-primary" onclick="solveGasLaw()">開始計算</button>
+                <button class="btn-ai" onclick="generateGasQuiz()">🤖 生成氣體測驗</button>
+            </div>
+            <div id="gasResult" class="ai-result-box">等待輸入氣體條件...</div>
+        </div>
+
         <div class="card card-full" style="margin-bottom: 20px;">
             <h3 style="border-left-color: var(--ai); color: var(--ai);">⚗️ 反應式配平精靈</h3>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
@@ -463,10 +475,10 @@
         } catch(e) {}
     }
 
-    // ====== V21 題庫儲存與匯出機制 ======
+    // ====== 題庫儲存與匯出機制 ======
     function exportBackupJSON() {
         const data = {
-            version: "V21", export_date: new Date().toLocaleString(),
+            version: "V22", export_date: new Date().toLocaleString(),
             quiz_vault: JSON.parse(localStorage.getItem('quiz_vault') || '[]')
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
@@ -571,14 +583,12 @@
         loadVault();
     }
 
-    // ====== V21 核心：108課綱 AI 測驗生成 ======
+    // ====== AI 測驗生成 ======
     function generateQuiz() {
         if(!currentCid && !currentSmiles) { alert("請先搜尋分子！"); return; }
-        
         const difficulty = document.getElementById('quizDifficultySingle').value;
         currentQuizContext.title = `主題測驗：${currentName} (${difficulty.split('(')[0].trim()})`;
         
-        // V21 Prompt 升級：明確納入 108 課綱與難度變數
         const prompt = `你是一位深諳台灣「108課綱」核心素養的資深高中化學老師。
 請根據分子「${currentName} (SMILES: ${currentSmiles || '未知'})」，設計 3 題難度為【${difficulty}】的選擇題。
 要求：
@@ -593,7 +603,6 @@
 
     function generateQuizFromCanvas() {
         if(!jsmeApplet || !jsmeApplet.smiles()) { alert("畫布為空！"); return; }
-        
         const difficulty = document.getElementById('quizDifficultyDraw').value;
         currentQuizContext.title = `自訂畫布測驗 (${difficulty.split('(')[0].trim()})`;
         
@@ -655,7 +664,32 @@
         }
     }
 
-    // ====== 進階運算 ======
+    // ====== 進階運算 (V22 氣體模組擴充) ======
+    function solveGasLaw() {
+        const cond = document.getElementById('gasInput').value.trim();
+        if(!cond) return;
+        const prompt = `你是一個專業的高中化學理想氣體引擎。請針對以下氣體條件進行解析與計算：[ ${cond} ]。
+請嚴格依照以下格式輸出：
+1. **已知條件分析**：(列出 P, V, n, R, T 分別是多少，需進行單位換算者請標示)
+2. **公式套用**：(列出使用的公式，如 PV=nRT 或其衍生)
+3. **計算詳解**：(逐步寫出算式與最終答案)
+4. **觀念提醒**：(提醒學生常犯錯誤，例如溫度未轉為絕對溫度 Kelvin)。請用繁體中文。`;
+        callGemini(prompt, 'gasResult');
+    }
+
+    function generateGasQuiz() {
+        currentQuizContext.title = `氣體定律 (PV=nRT) 專屬測驗`;
+        const prompt = `你是一位深諳台灣「108課綱」核心素養的資深高中化學老師。
+請設計 3 題關於「理想氣體方程式 (PV=nRT) 與氣體定律 (如波以耳、查理定律)」的素養導向選擇題。
+要求：
+1. 包含基礎計算與生活情境應用。
+2. 提供 A, B, C, D 選項，並在最後附上正確答案與簡單解析。
+請用繁體中文，排版清晰。`;
+        
+        document.getElementById('modalQuizTitle').innerHTML = `🎈 氣體定律測驗生成中...`;
+        callGemini(prompt, 'quizContent', true, true);
+    }
+
     function solveEquation() {
         const eq = document.getElementById('equationInput').value.trim();
         if(!eq) return;
@@ -677,15 +711,42 @@
         callGemini(prompt, 'stoichResult');
     }
 
-    // ====== 畫布邏輯 ======
+    // ====== 畫布邏輯 (V22 防呆升級：化學式自動轉 SMILES) ======
     function jsmeOnLoad() { 
         jsmeApplet = new JSApplet.JSME("jsme_container", "100%", "100%", { options: "newlook,star,nosmiles" });
         jsmeApplet.setCallBack("AfterStructureModified", onCanvasModified);
     }
-    function injectSmilesToCanvas() {
-        const str = document.getElementById('externalSmiles').value.trim();
-        if(str && jsmeApplet) jsmeApplet.readGenericMolecularInput(str);
+
+    async function injectSmilesToCanvas() {
+        const inputStr = document.getElementById('externalSmiles').value.trim();
+        if(!inputStr) { alert("請先輸入化學式、名稱或 SMILES 代碼！"); return; }
+        if(!jsmeApplet) return;
+
+        const syncBadge = document.getElementById('syncStatus');
+        syncBadge.className = "sync-indicator sync-active"; 
+        syncBadge.innerHTML = "🔄 智慧解析中...";
+
+        try {
+            // 嘗試透過 PubChem API 將化學式/名稱轉換為 SMILES
+            const res = await fetch(`${PUBCHEM_API}/compound/name/${encodeURIComponent(inputStr)}/property/CanonicalSMILES/JSON`);
+            if(res.ok) {
+                const data = await res.json();
+                const fetchedSmiles = data.PropertyTable.Properties[0].CanonicalSMILES;
+                jsmeApplet.readGenericMolecularInput(fetchedSmiles);
+                // 貼心地將輸入框的文字自動替換為正確的 SMILES，並給予視覺回饋
+                document.getElementById('externalSmiles').value = fetchedSmiles;
+                syncBadge.className = "sync-indicator sync-success"; 
+                syncBadge.innerHTML = "✅ 已將名稱/化學式轉為結構！";
+            } else {
+                // 若 API 查無資料，可能它本身就是一個合法的 SMILES，直接餵給畫布
+                jsmeApplet.readGenericMolecularInput(inputStr);
+            }
+        } catch(e) {
+            // 網路異常等狀況下的最後防線 (Fallback)
+            jsmeApplet.readGenericMolecularInput(inputStr);
+        }
     }
+
     function clearCanvas() {
         if (jsmeApplet) jsmeApplet.reset();
         document.getElementById('externalSmiles').value = "";
@@ -694,6 +755,7 @@
         document.getElementById('syncStatus').innerHTML = "⚫ 準備就緒";
         document.getElementById('syncStatus').className = "sync-indicator sync-idle";
     }
+
     function onCanvasModified() {
         const syncBadge = document.getElementById('syncStatus');
         syncBadge.className = "sync-indicator sync-active"; syncBadge.innerHTML = "✏️ 同步中...";
@@ -815,7 +877,7 @@
         status.innerHTML += `<br><b>完成！成功 ${successCount}/${names.length} 筆。</b>`;
         if (successCount > 0) {
             zip.generateAsync({type:"blob"}).then(content => {
-                saveAs(content, "講義素材包_V21.zip");
+                saveAs(content, "講義素材包_V22.zip");
                 status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`;
                 btn.disabled = false;
             });
@@ -824,4 +886,3 @@
 </script>
 </body>
 </html>
-
