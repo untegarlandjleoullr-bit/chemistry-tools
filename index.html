@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>高中化學講義素材整合工作站_V23</title>
+    <title>高中化學講義素材整合工作站_V24</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
@@ -15,13 +15,13 @@
         h1 { text-align: center; color: var(--primary); border-bottom: 2px solid #ecf0f1; padding-bottom: 15px; font-size: 24px; }
         
         .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #ccc; flex-wrap: wrap; }
-        .tab { padding: 12px 10px; cursor: pointer; font-weight: bold; color: #7f8c8d; border-bottom: 3px solid transparent; transition: 0.3s; flex-grow: 1; text-align: center; white-space: nowrap; font-size: 15px;}
+        .tab { padding: 12px 8px; cursor: pointer; font-weight: bold; color: #7f8c8d; border-bottom: 3px solid transparent; transition: 0.3s; flex-grow: 1; text-align: center; white-space: nowrap; font-size: 14px;}
         .tab:hover { color: var(--secondary); }
         .tab.active { color: var(--secondary); border-bottom: 3px solid var(--secondary); }
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        button, select { padding: 12px 18px; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        button, select { padding: 10px 15px; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
         select { color: #333; background: #fff; border: 1px solid #bdc3c7; cursor: pointer; }
         button:hover { opacity: 0.9; transform: translateY(-1px); }
         button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
@@ -37,8 +37,10 @@
         .btn-danger { background-color: var(--danger); }
         .btn-outline { background-color: transparent; border: 2px solid #bdc3c7; color: #7f8c8d; }
 
-        /* V23 升級為三欄位網格設計 */
+        /* V24 核心修復：使用 off-screen 替代 display: none */
         .dashboard { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
+        .off-screen { position: absolute !important; top: -9999px !important; left: -9999px !important; visibility: hidden; height: 0; overflow: hidden; margin: 0; }
+        
         .card { border: 1px solid #ecf0f1; border-radius: 8px; padding: 15px; background: #fafafa; }
         .card h3 { margin-top: 0; font-size: 16px; color: var(--primary); border-left: 4px solid var(--secondary); padding-left: 8px; }
         .card-full { grid-column: span 3; }
@@ -70,7 +72,6 @@
         .vault-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
         .vault-title { font-weight: bold; color: var(--ai); font-size: 16px; }
         .vault-date { font-size: 12px; color: #999; }
-        .vault-actions { display: flex; gap: 8px; }
 
         @media (max-width: 768px) {
             .dashboard, .canvas-layout { grid-template-columns: 1fr; }
@@ -79,23 +80,21 @@
             .toolbar > * { width: 100%; margin-left: 0 !important; }
             #jsme_container { height: 350px; }
             .vault-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .vault-actions { width: 100%; flex-wrap: wrap; }
-            .vault-actions button { flex: 1; min-width: 30%; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🔬 高中化學講義素材整合工作站_V23 (智慧介面版)</h1>
+    <h1>🔬 高中化學講義素材整合工作站_V24 (時事探究版)</h1>
     
     <div class="tabs">
         <div class="tab active" onclick="switchTab('single')">深度探索</div>
+        <div class="tab" onclick="switchTab('news')">📰 時事探究</div>
         <div class="tab" onclick="switchTab('draw')">AI 與畫布</div>
         <div class="tab" onclick="switchTab('formula')">公式計算</div>
         <div class="tab" onclick="switchTab('calc')">進階運算</div>
         <div class="tab" onclick="switchTab('vault'); loadVault();">📚 測驗題庫</div>
-        <div class="tab" onclick="switchTab('batch')">批量打包</div>
     </div>
 
     <div id="single" class="tab-content active">
@@ -106,7 +105,7 @@
         </div>
         <div id="singleStatus" class="status"></div>
         
-        <div class="dashboard" id="dashboardArea" style="display: none;">
+        <div class="dashboard off-screen" id="dashboardArea">
             <div class="card">
                 <h3>標準 2D 結構 (鍵線式)</h3>
                 <img id="chemImage" class="result-img">
@@ -145,11 +144,37 @@
         </div>
     </div>
 
+    <div id="news" class="tab-content">
+        <div style="display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+            <input type="text" id="newsInput" placeholder="輸入時事關鍵字 (例如: 瘦肉精、蘇丹紅、塑化劑)..." onkeypress="if(event.key === 'Enter') analyzeNews()">
+            <button class="btn-primary" onclick="analyzeNews()">🚀 AI 時事解析</button>
+        </div>
+        <div id="newsStatus" class="status"></div>
+
+        <div class="dashboard off-screen" id="newsDashboardArea" style="grid-template-columns: 1fr 1fr;">
+            <div class="card">
+                <h3>核心化學物質：<span id="newsChemName" style="color:var(--ai);"></span></h3>
+                <img id="newsChemImage" class="result-img">
+            </div>
+            <div class="card">
+                <h3>3D 立體模型</h3>
+                <div id="viewer3D_news" class="viewer-3d"></div>
+            </div>
+            <div class="card card-full">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
+                    <h3 style="margin:0; border:none; padding:0; color:var(--ai);">📰 AI 時事科學報與素養測驗</h3>
+                    <button class="btn-ai" onclick="saveQuizToVault()" id="saveNewsQuizBtn" disabled>💾 儲存至本機題庫</button>
+                </div>
+                <div id="newsReportContent" class="ai-result-box" style="font-size: 15px;">等待解析中...</div>
+            </div>
+        </div>
+    </div>
+
     <div id="draw" class="tab-content">
         <div class="toolbar">
             <button class="btn-dark" onclick="openApiKeyModal()" id="apiKeyBtn">🔑 設定金鑰</button>
             <button class="btn-info" onclick="document.getElementById('aiVisionUploader').click()">✨ AI 圖片辨識</button>
-            <input type="text" id="externalSmiles" placeholder="可直接貼上「化學式」或「SMILES」..." style="flex:1; min-width:150px; margin:0;">
+            <input type="text" id="externalSmiles" placeholder="可貼上化學式(如: C6H12O6) 或 SMILES..." style="flex:1; min-width:150px; margin:0;">
             <button class="btn-warning" onclick="injectSmilesToCanvas()">匯入畫布</button>
             <button class="btn-outline" onclick="clearCanvas()">🗑️ 清空</button>
             <span id="syncStatus" class="sync-indicator" style="background:#bdc3c7;color:#fff;">⚫ 準備就緒</span>
@@ -161,12 +186,12 @@
             <div class="guide-panel">
                 <h4 style="color:#d35400; margin-top:0;">✨ 雙軌操作指南</h4>
                 <p><b>AI 辨識：</b>設定金鑰後，上傳圖片，AI 會自動畫出結構。</p>
-                <p><b>智慧匯入：</b>上方欄位可直接輸入化學式 (如: C6H12O6)，系統自動防呆轉換！</p>
+                <p><b>智慧匯入：</b>上方欄位可直接輸入化學式，系統自動防呆轉換！</p>
                 <p><b>手動畫布：</b>先畫骨架(─)，再點擊線條變雙鍵(═)，點選原子(O)替換端點。</p>
             </div>
         </div>
 
-        <div class="dashboard" id="drawDashboardArea" style="opacity: 0.4; pointer-events: none;">
+        <div class="dashboard off-screen" id="drawDashboardArea">
             <div class="card">
                 <h3>標準化 2D 結構</h3>
                 <img id="drawChemImage" class="result-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
@@ -246,7 +271,7 @@
         <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
             <div>
                 <b style="color:var(--primary); font-size:16px;">🛡️ 題庫與系統備份</b><br>
-                <span style="font-size:13px; color:#666;">完整下載 JSON 格式備份，或在其他電腦還原您的資料。</span>
+                <span style="font-size:13px; color:#666;">完整下載 JSON 備份，或在其他電腦還原您的資料。</span>
             </div>
             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                 <button class="btn-outline" style="color:var(--primary); border-color:var(--primary);" onclick="exportBackupJSON()">📦 匯出備份 (JSON)</button>
@@ -256,12 +281,6 @@
             </div>
         </div>
         <div id="vaultList" class="vault-list"></div>
-    </div>
-
-    <div id="batch" class="tab-content">
-        <textarea id="batchInput" placeholder="例如：&#10;阿斯匹靈&#10;Benzene"></textarea>
-        <div style="text-align: right; margin-top: 10px;"><button id="batchBtn" class="btn-success" onclick="startBatch()">開始批量打包</button></div>
-        <div id="batchStatus" class="status"></div>
     </div>
 
     <div id="apiOverlay" class="overlay" onclick="this.style.display='none'">
@@ -303,12 +322,11 @@
     const PUBCHEM_API = "https://pubchem.ncbi.nlm.nih.gov/rest/pug";
     const WIKI_API = "https://zh.wikipedia.org/w/api.php?action=query&prop=langlinks&lllang=en&format=json&origin=*&redirects=1&titles=";
     
-    let viewer3D_single = null, viewer3D_draw = null;
+    let viewer3D_single = null, viewer3D_draw = null, viewer3D_news = null;
     let jsmeApplet = null, jsme_planar_single = null, jsme_planar_draw = null;
     let drawDebounceTimer = null; 
     let currentCid = null, currentName = "", currentSmiles = "";
     let cachedModelName = "";
-    
     let currentQuizContext = { title: "", textContent: "" };
 
     window.onload = function() { 
@@ -329,20 +347,16 @@
     function saveApiKey() {
         const key = document.getElementById('apiKeyValue').value.trim();
         if (key) {
-            localStorage.setItem('gemini_api_key', key);
-            cachedModelName = ""; 
+            localStorage.setItem('gemini_api_key', key); cachedModelName = ""; 
             document.getElementById('apiOverlay').style.display = 'none';
-            checkApiKeyStatus();
-            alert("✅ 金鑰已成功儲存！請再次執行您的操作。");
+            checkApiKeyStatus(); alert("✅ 金鑰已成功儲存！");
         } else { alert("請輸入有效的金鑰"); }
     }
     function clearApiKey() {
-        localStorage.removeItem('gemini_api_key');
-        cachedModelName = "";
+        localStorage.removeItem('gemini_api_key'); cachedModelName = "";
         document.getElementById('apiKeyValue').value = '';
         document.getElementById('apiOverlay').style.display = 'none';
-        checkApiKeyStatus();
-        alert("🗑️ 金鑰已移除！");
+        checkApiKeyStatus(); alert("🗑️ 金鑰已移除！");
     }
     function checkApiKeyStatus() {
         const key = localStorage.getItem('gemini_api_key');
@@ -351,7 +365,6 @@
         else { btn.innerHTML = "🔑 設定金鑰"; btn.style.backgroundColor = "#34495e"; }
     }
 
-    // ====== AI 模型探索引擎 ======
     async function getBestModel(apiKey) {
         if (cachedModelName) return cachedModelName;
         try {
@@ -413,11 +426,99 @@
         return null;
     }
 
+    // ====== V24 核心功能：📰 時事探究 ======
+    async function analyzeNews() {
+        const keyword = document.getElementById('newsInput').value.trim();
+        if(!keyword) { alert('請輸入時事關鍵字！'); return; }
+        
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if(!apiKey) { openApiKeyModal(); return; }
+
+        const dash = document.getElementById('newsDashboardArea');
+        const status = document.getElementById('newsStatus');
+        const resultBox = document.getElementById('newsReportContent');
+        const btnSave = document.getElementById('saveNewsQuizBtn');
+
+        status.innerHTML = `✨ 正在由 AI 判定時事核心化學物質...`;
+        status.style.color = "#333";
+        dash.classList.add('off-screen'); 
+        btnSave.disabled = true;
+
+        try {
+            const modelName = await getBestModel(apiKey);
+            
+            // Agent 1: 判定實體
+            const prompt1 = `使用者查詢了時事議題「${keyword}」。請找出這個議題最核心相關的一種化學物質。請嚴格「只」回傳該物質的「英文常見俗名或學名」(例如: Ractopamine, Sudan I, Melamine)，不要任何引號或解釋。若此議題無關化學物質，請回傳 ERROR。`;
+            const res1 = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ contents: [{ parts: [{text: prompt1}] }], generationConfig: { temperature: 0.1 } })
+            });
+            if(!res1.ok) throw new Error("API 連線失敗");
+            const chemNameEng = (await res1.json()).candidates[0].content.parts[0].text.trim();
+
+            if (chemNameEng.includes("ERROR") || !chemNameEng) throw new Error("無法判定相關化學物質");
+            status.innerHTML = `🔍 判定為核心物質「${chemNameEng}」，正在抓取結構庫...`;
+
+            // 取 CID
+            let cid = await searchPubChemAPI(chemNameEng);
+            if (!cid) {
+                 const translated = await translateViaWikipedia(chemNameEng);
+                 if (translated) cid = await searchPubChemAPI(translated);
+            }
+            if (!cid) throw new Error(`找不到「${chemNameEng}」的結構庫資料`);
+
+            // 繪製 2D & 3D
+            document.getElementById('newsChemName').textContent = `${chemNameEng} (${keyword})`;
+            document.getElementById('newsChemImage').src = `${PUBCHEM_API}/compound/cid/${cid}/PNG?record_type=2d&image_size=large`;
+            
+            dash.classList.remove('off-screen'); // 顯示面板
+            load3DAsync(cid, 'viewer3D_news', 'viewer3D_news_ref');
+
+            // 取得 SMILES 供 Agent 2 參考
+            const propsRes = await fetch(`${PUBCHEM_API}/compound/cid/${cid}/property/CanonicalSMILES/JSON`);
+            let smiles = "";
+            if(propsRes.ok) smiles = (await propsRes.json()).PropertyTable.Properties[0].CanonicalSMILES;
+
+            // Agent 2: 生成報紙與測驗
+            status.innerHTML = `🤖 正在撰寫時事科學報與素養測驗...`;
+            resultBox.innerHTML = '<span style="color:#f39c12">🔄 AI 撰寫中，請稍候...</span>';
+
+            const prompt2 = `你是一位資深高中化學老師。請針對時事議題「${keyword}」與其核心化學物質「${chemNameEng} (SMILES: ${smiles})」，撰寫一篇符合台灣108課綱素養精神的內容。
+請嚴格依照以下格式輸出：
+### 📰 時事科學報
+(撰寫約 300 字的短文，介紹該事件背景、該物質的化學特性，以及為什麼會引起關注或危害)
+### 📝 素養測驗
+(設計 2 題與此事件或物質相關的高中程度選擇題，並附上解答與詳細解析)
+請用繁體中文，排版美觀。`;
+
+            const res2 = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ contents: [{ parts: [{text: prompt2}] }], generationConfig: { temperature: 0.3 } })
+            });
+
+            const finalReport = (await res2.json()).candidates[0].content.parts[0].text;
+            resultBox.innerHTML = finalReport.replace(/\n/g, '<br>');
+            
+            // 賦值供儲存
+            currentQuizContext.title = `📰 時事探究：${keyword}`;
+            currentQuizContext.textContent = finalReport;
+            btnSave.disabled = false;
+
+            status.innerHTML = `✅ 時事解析完成！`;
+            status.style.color = "#2ecc71";
+
+        } catch (e) {
+            status.innerHTML = `❌ 解析失敗：${e.message}`;
+            status.style.color = "#e74c3c";
+            dash.classList.add('off-screen');
+        }
+    }
+
     // ====== 分頁 1：深度探索 ======
     function clearSingle() {
         document.getElementById('chemName').value = "";
         document.getElementById('singleStatus').innerHTML = "";
-        document.getElementById('dashboardArea').style.display = "none";
+        document.getElementById('dashboardArea').classList.add('off-screen'); // V24 修復
         currentCid = null; currentName = ""; currentSmiles = "";
         if(jsme_planar_single) jsme_planar_single.reset();
     }
@@ -430,7 +531,7 @@
 
         if (!name) { status.textContent = "請輸入名稱！"; return; }
         status.innerHTML = `🔄 查詢中...`; status.style.color = "#333";
-        dash.style.display = "none"; btn.disabled = true; currentSmiles = ""; 
+        dash.classList.add('off-screen'); btn.disabled = true; currentSmiles = ""; 
 
         const result = await smartGetCid(name, 'singleStatus');
         if (!result) {
@@ -446,7 +547,7 @@
         document.getElementById('td_smiles').textContent = "載入中...";
         document.getElementById('chemImage').src = `${PUBCHEM_API}/compound/cid/${currentCid}/PNG?record_type=2d&image_size=large`;
         
-        dash.style.display = "grid"; 
+        dash.classList.remove('off-screen'); // V24 修復：解除推移，恢復實體
         status.innerHTML = `✅ 解析完成！`; status.style.color = "#2ecc71";
         btn.disabled = false;
 
@@ -477,9 +578,7 @@
                     document.getElementById('td_iupac').textContent = props.IUPACName || "無";
                     document.getElementById('td_formula').textContent = props.MolecularFormula || "無";
                     document.getElementById('td_weight').textContent = props.MolecularWeight ? props.MolecularWeight + " g/mol" : "無";
-                    currentSmiles = props.CanonicalSMILES || ""; 
-                    document.getElementById('td_smiles').textContent = currentSmiles;
-                    // V23 繪製完整平面結構
+                    currentSmiles = props.CanonicalSMILES || ""; document.getElementById('td_smiles').textContent = currentSmiles;
                     if(jsme_planar_single && currentSmiles) jsme_planar_single.readGenericMolecularInput(currentSmiles);
                 } else if (context === 'draw') {
                     document.getElementById('td_draw_iupac').textContent = props.IUPACName || "無";
@@ -491,12 +590,8 @@
 
     // ====== 題庫儲存與匯出 ======
     function exportBackupJSON() {
-        const data = {
-            version: "V23", export_date: new Date().toLocaleString(),
-            quiz_vault: JSON.parse(localStorage.getItem('quiz_vault') || '[]')
-        };
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-        saveAs(blob, `Chemistry_Tools_Backup_${Date.now()}.json`);
+        const data = { version: "V24", export_date: new Date().toLocaleString(), quiz_vault: JSON.parse(localStorage.getItem('quiz_vault') || '[]') };
+        saveAs(new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }), `Chemistry_Backup_${Date.now()}.json`);
     }
     function triggerBackupImport() { document.getElementById('backupUploader').click(); }
     function importBackupJSON(event) {
@@ -506,9 +601,8 @@
             try {
                 const data = JSON.parse(e.target.result);
                 if (data.quiz_vault) {
-                    if(confirm("⚠️ 警告：匯入備份將【完全覆蓋】您目前瀏覽器中的題庫資料。\n確定要繼續還原嗎？")) {
-                        localStorage.setItem('quiz_vault', JSON.stringify(data.quiz_vault));
-                        loadVault(); alert("✅ 系統備份已成功還原！");
+                    if(confirm("⚠️ 警告：匯入備份將【完全覆蓋】目前的題庫資料。\n確定要繼續還原嗎？")) {
+                        localStorage.setItem('quiz_vault', JSON.stringify(data.quiz_vault)); loadVault(); alert("✅ 系統備份已成功還原！");
                     }
                 } else { alert("❌ 錯誤：這不是有效的工作站備份檔案。"); }
             } catch (err) { alert("❌ 解析備份失敗。"); }
@@ -516,27 +610,19 @@
         };
         reader.readAsText(file);
     }
-
     function saveQuizToVault() {
         if (!currentQuizContext.textContent) return;
         let vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        vault.unshift({
-            id: Date.now().toString(), date: new Date().toLocaleString(),
-            title: currentQuizContext.title, content: currentQuizContext.textContent
-        });
+        vault.unshift({ id: Date.now().toString(), date: new Date().toLocaleString(), title: currentQuizContext.title, content: currentQuizContext.textContent });
         localStorage.setItem('quiz_vault', JSON.stringify(vault));
         alert("✅ 測驗已成功儲存至本機題庫！");
         document.getElementById('quizOverlay').style.display = 'none';
         if(document.getElementById('vault').classList.contains('active')) loadVault();
     }
-
     function loadVault() {
         const vaultList = document.getElementById('vaultList');
         const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        if (vault.length === 0) {
-            vaultList.innerHTML = '<div style="text-align:center; padding: 40px; color: #999;">📭 目前題庫是空的。</div>';
-            return;
-        }
+        if (vault.length === 0) { vaultList.innerHTML = '<div style="text-align:center; padding: 40px; color: #999;">📭 目前題庫是空的。</div>'; return; }
         let html = '';
         vault.forEach(quiz => {
             const preview = quiz.content.substring(0, 120).replace(/\n/g, ' ') + '...';
@@ -555,11 +641,9 @@
         });
         vaultList.innerHTML = html;
     }
-
     function exportQuizTXT(id) {
         const quiz = JSON.parse(localStorage.getItem('quiz_vault') || '[]').find(q => q.id === id); if (!quiz) return;
-        const fileContent = `=================================\n【${quiz.title}】\n產生時間：${quiz.date}\n=================================\n\n${quiz.content}`;
-        saveAs(new Blob([fileContent], { type: "text/plain;charset=utf-8" }), `${quiz.title}_測驗卷.txt`);
+        saveAs(new Blob([`=================================\n【${quiz.title}】\n產生時間：${quiz.date}\n=================================\n\n${quiz.content}`], { type: "text/plain;charset=utf-8" }), `${quiz.title}_測驗卷.txt`);
     }
     function exportQuizWord(id) {
         const quiz = JSON.parse(localStorage.getItem('quiz_vault') || '[]').find(q => q.id === id); if (!quiz) return;
@@ -569,13 +653,11 @@
     }
     function deleteQuiz(id) {
         if(!confirm("確定要刪除這筆測驗紀錄嗎？")) return;
-        localStorage.setItem('quiz_vault', JSON.stringify(JSON.parse(localStorage.getItem('quiz_vault') || '[]').filter(q => q.id !== id)));
-        loadVault();
+        localStorage.setItem('quiz_vault', JSON.stringify(JSON.parse(localStorage.getItem('quiz_vault') || '[]').filter(q => q.id !== id))); loadVault();
     }
     function clearVault() {
-        if(!confirm("⚠️ 嚴重警告：確定要清空所有儲存的題庫嗎？此操作無法復原！")) return;
-        localStorage.removeItem('quiz_vault');
-        loadVault();
+        if(!confirm("⚠️ 嚴重警告：確定要清空所有題庫嗎？此操作無法復原！")) return;
+        localStorage.removeItem('quiz_vault'); loadVault();
     }
 
     // ====== AI 測驗生成 ======
@@ -583,79 +665,18 @@
         if(!currentCid && !currentSmiles) { alert("請先搜尋分子！"); return; }
         const difficulty = document.getElementById('quizDifficultySingle').value;
         currentQuizContext.title = `主題測驗：${currentName} (${difficulty.split('(')[0].trim()})`;
-        const prompt = `你是一位深諳台灣「108課綱」核心素養的高中化學老師。請根據分子「${currentName} (SMILES: ${currentSmiles || '未知'})」，設計 3 題難度為【${difficulty}】的選擇題。\n要求：嚴格遵守高中化學範圍，附上選項、答案與解析。請用繁體中文。`;
+        const prompt = `你是一位深諳台灣「108課綱」核心素養的高中化學老師。請根據分子「${currentName} (SMILES: ${currentSmiles || '未知'})」，設計 3 題難度為【${difficulty}】的選擇題。\n要求：嚴格遵守高中範圍，附選項、答案與解析。請用繁體中文。`;
         document.getElementById('modalQuizTitle').innerHTML = `🤖 108課綱測驗生成中...`;
         callGemini(prompt, 'quizContent', true, true);
     }
-
     function generateQuizFromCanvas() {
         if(!jsmeApplet || !jsmeApplet.smiles()) { alert("畫布為空！"); return; }
         const difficulty = document.getElementById('quizDifficultyDraw').value;
         currentQuizContext.title = `自訂畫布測驗 (${difficulty.split('(')[0].trim()})`;
-        const prompt = `你是一位深諳台灣「108課綱」核心素養的高中化學老師。請根據此 SMILES 結構「${jsmeApplet.smiles()}」，設計 3 題難度為【${difficulty}】的選擇題。\n要求：嚴格遵守高中範圍，附上答案與解析。請用繁體中文。`;
+        const prompt = `你是一位深諳台灣「108課綱」核心素養的高中化學老師。請根據此 SMILES 結構「${jsmeApplet.smiles()}」，設計 3 題難度為【${difficulty}】的選擇題。\n要求：嚴格遵守高中範圍，附答案與解析。請用繁體中文。`;
         document.getElementById('modalQuizTitle').innerHTML = `🤖 108課綱測驗生成中...`;
         callGemini(prompt, 'quizContent', true, true);
     }
-
-    async function callGemini(prompt, resultBoxId, isModal = false, isQuiz = false) {
-        const apiKey = localStorage.getItem('gemini_api_key');
-        if(!apiKey) { openApiKeyModal(); return; }
-        
-        const btnSave = document.getElementById('saveQuizBtn');
-        if(isModal) {
-            document.getElementById('quizOverlay').style.display = "flex";
-            if(btnSave) btnSave.disabled = true;
-        }
-        
-        const resultBox = document.getElementById(resultBoxId);
-        resultBox.innerHTML = '<span style="color:#f39c12">🔄 正在偵測可用 AI 模型...</span>';
-        
-        try {
-            const modelName = await getBestModel(apiKey);
-            resultBox.innerHTML = `<span style="color:#f39c12">🔄 模型鎖定 (${modelName})，高速運算中...</span>`;
-            
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2 } })
-            });
-            
-            if(!res.ok) {
-                const errData = await res.json();
-                throw new Error(errData.error?.message || `HTTP 錯誤碼: ${res.status}`);
-            }
-            
-            const data = await res.json();
-            const textResponse = data.candidates[0].content.parts[0].text;
-            
-            resultBox.innerHTML = textResponse.replace(/\n/g, '<br>');
-            
-            if(isQuiz) {
-                if(isModal) document.getElementById('modalQuizTitle').innerHTML = `🤖 AI 化學隨堂測驗`;
-                currentQuizContext.textContent = textResponse;
-                if(btnSave) btnSave.disabled = false;
-            }
-
-        } catch(e) {
-            resultBox.innerHTML = `
-                <span style="color:red; font-weight:bold;">❌ 運算失敗：</span><br>
-                <span style="color:#c0392b; font-size: 13px;">${e.message}</span>`;
-        }
-    }
-
-    // ====== 公式計算與進階運算 ======
-    function solveGasLaw() {
-        const cond = document.getElementById('gasInput').value.trim();
-        if(!cond) return;
-        const prompt = `你是一個專業的高中化學理想氣體引擎。請針對以下氣體條件進行解析與計算：[ ${cond} ]。
-請嚴格依照以下格式輸出：
-1. **已知條件分析**：(列出 P, V, n, R, T，需進行單位換算者請標示)
-2. **公式套用**：(列出使用的公式，如 PV=nRT)
-3. **計算詳解**：(逐步寫出算式與最終答案)
-4. **觀念提醒**：(提醒學生常犯錯誤)。請用繁體中文。`;
-        callGemini(prompt, 'gasResult');
-    }
-
     function generateGasQuiz() {
         currentQuizContext.title = `氣體定律專屬測驗`;
         const prompt = `你是一位深諳台灣「108課綱」的高中化學老師。請設計 3 題關於「理想氣體方程式與氣體定律」的素養導向選擇題。\n要求：包含基礎計算與情境應用，附選項與解析。請用繁體中文。`;
@@ -663,99 +684,97 @@
         callGemini(prompt, 'quizContent', true, true);
     }
 
+    async function callGemini(prompt, resultBoxId, isModal = false, isQuiz = false) {
+        const apiKey = localStorage.getItem('gemini_api_key');
+        if(!apiKey) { openApiKeyModal(); return; }
+        const btnSave = document.getElementById('saveQuizBtn');
+        if(isModal) { document.getElementById('quizOverlay').style.display = "flex"; if(btnSave) btnSave.disabled = true; }
+        
+        const resultBox = document.getElementById(resultBoxId);
+        resultBox.innerHTML = '<span style="color:#f39c12">🔄 正在偵測可用 AI 模型...</span>';
+        try {
+            const modelName = await getBestModel(apiKey);
+            resultBox.innerHTML = `<span style="color:#f39c12">🔄 模型鎖定 (${modelName})，高速運算中...</span>`;
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2 } })
+            });
+            if(!res.ok) throw new Error((await res.json()).error?.message || `HTTP 錯誤碼: ${res.status}`);
+            
+            const textResponse = (await res.json()).candidates[0].content.parts[0].text;
+            resultBox.innerHTML = textResponse.replace(/\n/g, '<br>');
+            if(isQuiz) { currentQuizContext.textContent = textResponse; if(btnSave) btnSave.disabled = false; }
+        } catch(e) { resultBox.innerHTML = `<span style="color:red; font-weight:bold;">❌ 運算失敗：</span><br><span style="color:#c0392b; font-size: 13px;">${e.message}</span>`; }
+    }
+
+    // ====== 運算與畫布 ======
+    function solveGasLaw() {
+        const cond = document.getElementById('gasInput').value.trim(); if(!cond) return;
+        callGemini(`你是一個專業的高中化學理想氣體引擎。請針對氣體條件：[ ${cond} ]。\n輸出：1.已知條件分析 2.公式套用 3.計算詳解 4.觀念提醒。請用繁體中文。`, 'gasResult');
+    }
     function solveEquation() {
-        const eq = document.getElementById('equationInput').value.trim();
-        if(!eq) return;
-        const prompt = `你是一個專業的化學平衡引擎。請平衡以下化學反應式：[ ${eq} ]。\n請依照格式輸出：\n1. **平衡反應式**\n2. **反應類型**\n3. **細部解析**。請用繁體中文。`;
-        callGemini(prompt, 'equationResult');
+        const eq = document.getElementById('equationInput').value.trim(); if(!eq) return;
+        callGemini(`你是一個化學平衡引擎。請平衡反應式：[ ${eq} ]。\n輸出：1.平衡反應式 2.反應類型 3.細部解析。請用繁體中文。`, 'equationResult');
     }
-
     function analyzeLimitingReactant() {
-        const item = document.getElementById('limitingInput').value.trim();
-        if(!item) return;
-        const prompt = `你是一個化學計量精算師。針對反應情境：[ ${item} ]。\n請依照步驟運算並輸出：\n1. **反應方程式**\n2. **莫耳數換算**\n3. **限量試劑判定**\n4. **理論產率計算**。請用繁體中文。`;
-        callGemini(prompt, 'limitingResult');
+        const item = document.getElementById('limitingInput').value.trim(); if(!item) return;
+        callGemini(`你是一個化學計量精算師。針對情境：[ ${item} ]。\n輸出：1.反應方程式 2.莫耳數換算 3.限量試劑判定 4.理論產率計算。請用繁體中文。`, 'limitingResult');
     }
-
     function analyzeStoichiometry() {
-        const item = document.getElementById('stoichInput').value.trim();
-        if(!item) return;
-        const prompt = `你是一個化學計量精算師。請分析此物質：[ ${item} ]。\n請依照格式輸出：\n1. **化學式與精確分子量**\n2. **元素質量百分比組成 (%)**\n3. **物理/化學性質速覽**。請用繁體中文。`;
-        callGemini(prompt, 'stoichResult');
+        const item = document.getElementById('stoichInput').value.trim(); if(!item) return;
+        callGemini(`你是一個化學計量精算師。分析物質：[ ${item} ]。\n輸出：1.化學式與分子量 2.元素質量百分比組成(%) 3.性質速覽。請用繁體中文。`, 'stoichResult');
     }
 
-    // ====== 畫布邏輯 (V23 智慧防呆匯入) ======
     function jsmeOnLoad() { 
         jsmeApplet = new JSApplet.JSME("jsme_container", "100%", "100%", { options: "newlook,star,nosmiles" });
         jsmeApplet.setCallBack("AfterStructureModified", onCanvasModified);
-        
-        // V23 實作平面結構渲染器 (Read-only, 無 UI)
         jsme_planar_single = new JSApplet.JSME("planar_single", "100%", "100%", { options: "depict,ro,newlook" });
         jsme_planar_draw = new JSApplet.JSME("planar_draw", "100%", "100%", { options: "depict,ro,newlook" });
     }
-
-    // V23 核心：智慧攔截器，不再讓 JSME 跳出內部報錯視窗
     async function injectSmilesToCanvas() {
         const inputStr = document.getElementById('externalSmiles').value.trim();
-        if(!inputStr) { alert("請先輸入化學式、名稱或 SMILES 代碼！"); return; }
+        if(!inputStr) { alert("請先輸入化學式、名稱或 SMILES！"); return; }
         if(!jsmeApplet) return;
-
         const syncBadge = document.getElementById('syncStatus');
-        syncBadge.className = "sync-indicator sync-active"; 
-        syncBadge.innerHTML = "🔄 智慧解析中...";
+        syncBadge.className = "sync-indicator sync-active"; syncBadge.innerHTML = "🔄 智慧解析中...";
 
-        // 1. 先去 PubChem 驗證是否為純粹合法的 SMILES
         try {
             const resSmiles = await fetch(`${PUBCHEM_API}/compound/smiles/${encodeURIComponent(inputStr)}/cids/JSON`);
             if (resSmiles.ok) {
                 jsmeApplet.readGenericMolecularInput(inputStr);
-                syncBadge.className = "sync-indicator sync-success"; 
-                syncBadge.innerHTML = "✅ 已匯入結構！";
-                return;
+                syncBadge.className = "sync-indicator sync-success"; syncBadge.innerHTML = "✅ 已匯入結構！"; return;
             }
         } catch(e) {}
 
-        // 2. 不是純 SMILES (例如輸入了 C6H12O6 或 阿斯匹靈)，啟動翻譯引擎
         const result = await smartGetCid(inputStr, null);
         if (result && result.cid) {
             try {
                 const resProps = await fetch(`${PUBCHEM_API}/compound/cid/${result.cid}/property/CanonicalSMILES/JSON`);
                 if (resProps.ok) {
-                    const data = await resProps.json();
-                    const fetchedSmiles = data.PropertyTable.Properties[0].CanonicalSMILES;
+                    const fetchedSmiles = (await resProps.json()).PropertyTable.Properties[0].CanonicalSMILES;
                     jsmeApplet.readGenericMolecularInput(fetchedSmiles);
-                    document.getElementById('externalSmiles').value = fetchedSmiles; // 貼心替換為正確 SMILES
-                    syncBadge.className = "sync-indicator sync-success"; 
-                    syncBadge.innerHTML = `✅ 已將 ${result.finalName} 轉為結構！`;
-                    return;
+                    document.getElementById('externalSmiles').value = fetchedSmiles; 
+                    syncBadge.className = "sync-indicator sync-success"; syncBadge.innerHTML = `✅ 已轉為結構！`; return;
                 }
             } catch(e) {}
         }
-
-        // 3. 都失敗了，攔截報錯
-        syncBadge.className = "sync-indicator"; 
-        syncBadge.style.background = "#e74c3c";
-        syncBadge.innerHTML = "❌ 無法解析此輸入";
-        alert("無法解析此輸入，系統不知道該如何繪製。\n\n請確認您輸入的是正確的化學式、常見俗名或合法的 SMILES 代碼。");
+        syncBadge.className = "sync-indicator"; syncBadge.style.background = "#e74c3c"; syncBadge.innerHTML = "❌ 無法解析此輸入";
+        alert("無法解析此輸入，請確認是否為正確的化學式或常見俗名。");
     }
 
     function clearCanvas() {
         if (jsmeApplet) jsmeApplet.reset();
         if (jsme_planar_draw) jsme_planar_draw.reset();
         document.getElementById('externalSmiles').value = "";
-        document.getElementById('drawDashboardArea').style.opacity = "0.4";
-        document.getElementById('drawDashboardArea').style.pointerEvents = "none";
+        document.getElementById('drawDashboardArea').classList.add('off-screen');
         document.getElementById('syncStatus').innerHTML = "⚫ 準備就緒";
         document.getElementById('syncStatus').className = "sync-indicator sync-idle";
     }
-
     function onCanvasModified() {
         const syncBadge = document.getElementById('syncStatus');
         syncBadge.className = "sync-indicator sync-active"; syncBadge.innerHTML = "✏️ 同步中...";
-        clearTimeout(drawDebounceTimer);
-        drawDebounceTimer = setTimeout(analyzeCanvasRealTime, 1200); 
+        clearTimeout(drawDebounceTimer); drawDebounceTimer = setTimeout(analyzeCanvasRealTime, 1200); 
     }
-    
     async function analyzeCanvasRealTime() {
         const dash = document.getElementById('drawDashboardArea'), badge = document.getElementById('syncStatus');
         if (!jsmeApplet || !jsmeApplet.smiles()) return;
@@ -766,118 +785,72 @@
             const cid = (await res.json()).IdentifierList.CID[0];
             
             document.getElementById('td_draw_smiles').textContent = sm;
-            dash.style.opacity = "1"; dash.style.pointerEvents = "auto";
+            dash.classList.remove('off-screen'); // V24 修復
             document.getElementById('drawChemImage').src = `${PUBCHEM_API}/compound/cid/${cid}/PNG?record_type=2d&image_size=large`;
             badge.className = "sync-indicator sync-success"; badge.innerHTML = "✅ 同步完成";
             
-            // V23 繪製完整平面結構
             if(jsme_planar_draw) jsme_planar_draw.readGenericMolecularInput(sm);
-            
             load3DAsync(cid, 'drawViewer_3D', 'viewer3D_draw');
             loadPropertiesAsync(cid, 'draw');
         } catch(e) { badge.className = "sync-indicator"; badge.style.background = "#e74c3c"; badge.innerHTML = "❌ 查無標準分子"; }
     }
-    
     async function handleAIVisionUpload(event) {
         const file = event.target.files[0]; if(!file) return; event.target.value = '';
         const apiKey = localStorage.getItem('gemini_api_key');
         if(!apiKey) { openApiKeyModal(); return; }
-        
         const syncBadge = document.getElementById('syncStatus');
-        syncBadge.className = "sync-indicator sync-active";
-        syncBadge.innerHTML = "✨ Gemini 解析中...";
-        
+        syncBadge.className = "sync-indicator sync-active"; syncBadge.innerHTML = "✨ Gemini 解析中...";
         try {
             const b64 = await new Promise(r => { const rd=new FileReader(); rd.onload=()=>r(rd.result); rd.readAsDataURL(file); });
             const modelName = await getBestModel(apiKey);
-
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ contents: [{ parts: [{text: "辨識圖中化學分子，僅輸出SMILES代碼，不含markdown格式。失敗輸出ERROR。"}, {inline_data: {mime_type: file.type, data: b64.split(',')[1]}}] }] })
             });
-            
             if(!res.ok) throw new Error("HTTP 錯誤");
             const text = (await res.json()).candidates[0].content.parts[0].text.trim().replace(/```/g, '');
             if(text==="ERROR" || !text) throw new Error("無法辨識為化學結構");
             document.getElementById('externalSmiles').value = text;
             jsmeApplet.readGenericMolecularInput(text);
-        } catch(e) { 
-            syncBadge.className = "sync-indicator";
-            syncBadge.style.background = "#e74c3c";
-            syncBadge.innerHTML = "❌ 辨識失敗";
-            alert(`AI 辨識發生錯誤：\n${e.message}`); 
-        }
+        } catch(e) { syncBadge.innerHTML = "❌ 辨識失敗"; alert(`AI 辨識發生錯誤：\n${e.message}`); }
     }
 
     // ====== 輔助功能 ======
     function showAR() {
-        if (window.location.protocol === 'file:') {
-            alert("【本機防呆提示】\nAR 投影需要上傳至網頁伺服器。\n您目前在桌面開啟 (file:///)，手機無法連線您的硬碟！");
-            return;
-        }
-        const arOverlay = document.getElementById('arOverlay');
-        const qrBox = document.getElementById('arQrCode');
+        if (window.location.protocol === 'file:') { alert("【本機防呆提示】\nAR 投影需上傳至網頁伺服器。\n您目前在桌面開啟，手機無法連線您的硬碟！"); return; }
+        const arOverlay = document.getElementById('arOverlay'), qrBox = document.getElementById('arQrCode');
         const arLink = `${window.location.href.split('?')[0]}?search=${encodeURIComponent(currentName)}`;
         qrBox.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(arLink)}" alt="QR Code">`;
         arOverlay.style.display = "flex";
     }
-
-    function downloadImage(id, name) {
-        const a = document.createElement('a'); a.download = `${name}.png`; a.href = document.getElementById(id).src; a.click();
-    }
-    
-    function copyText(id) {
-        navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => alert("已複製！"));
-    }
-
+    function downloadImage(id, name) { const a = document.createElement('a'); a.download = `${name}.png`; a.href = document.getElementById(id).src; a.click(); }
+    function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(() => alert("已複製！")); }
     function switchTab(id) {
         document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
         document.querySelector(`.tab[onclick*="${id}"]`).classList.add('active');
         document.getElementById(id).classList.add('active');
-        // V23 確保切換畫布時觸發視窗重繪，避免破版
-        if((id === 'draw' || id === 'single') && jsmeApplet) window.dispatchEvent(new Event('resize'));
+        if((id === 'draw' || id === 'single' || id === 'news') && jsmeApplet) window.dispatchEvent(new Event('resize'));
     }
-
     async function startBatch() {
         const inputStr = document.getElementById('batchInput').value.trim();
         const status = document.getElementById('batchStatus');
         const btn = document.getElementById('batchBtn');
-
         if (!inputStr) { status.textContent = "請輸入至少一個名稱！"; return; }
-
         const names = inputStr.split('\n').map(n => n.trim()).filter(n => n.length > 0);
-        status.style.color = "var(--primary)";
-        status.innerHTML = `啟動批量處理，共計 ${names.length} 個項目...<br>`;
-        btn.disabled = true;
-
-        const zip = new JSZip();
-        const imgFolder = zip.folder("化學2D結構圖");
-        let successCount = 0;
-
+        status.style.color = "var(--primary)"; status.innerHTML = `啟動批量處理，共計 ${names.length} 個項目...<br>`; btn.disabled = true;
+        const zip = new JSZip(), imgFolder = zip.folder("化學2D結構圖"); let successCount = 0;
         for (let i = 0; i < names.length; i++) {
-            const name = names[i];
-            status.innerHTML += `[${i+1}/${names.length}] 解析：${name}... `;
-            
+            const name = names[i]; status.innerHTML += `[${i+1}/${names.length}] 解析：${name}... `;
             const result = await smartGetCid(name, null); 
             if (result && result.cid) {
                 try {
                     const res = await fetch(`${PUBCHEM_API}/compound/cid/${result.cid}/PNG?record_type=2d&image_size=large`);
-                    if (res.ok) {
-                        imgFolder.file(`${name}.png`, await res.blob()); 
-                        status.innerHTML += `<span style="color:green;">成功</span><br>`;
-                        successCount++;
-                    }
+                    if (res.ok) { imgFolder.file(`${name}.png`, await res.blob()); status.innerHTML += `<span style="color:green;">成功</span><br>`; successCount++; }
                 } catch (e) { status.innerHTML += `<span style="color:red;">下載失敗</span><br>`; }
             } else { status.innerHTML += `<span style="color:red;">找不到</span><br>`; }
         }
-
         status.innerHTML += `<br><b>完成！成功 ${successCount}/${names.length} 筆。</b>`;
-        if (successCount > 0) {
-            zip.generateAsync({type:"blob"}).then(content => {
-                saveAs(content, "講義素材包_V23.zip");
-                status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`;
-                btn.disabled = false;
-            });
+        if (successCount > 0) { zip.generateAsync({type:"blob"}).then(content => { saveAs(content, "講義素材包_V24.zip"); status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`; btn.disabled = false; });
         } else { btn.disabled = false; }
     }
 </script>
