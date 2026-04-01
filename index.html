@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>高中化學講義素材整合工作站_V20</title>
+    <title>高中化學講義素材整合工作站_V21</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
@@ -21,7 +21,8 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
 
-        button { padding: 12px 18px; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        button, select { padding: 12px 18px; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; transition: 0.3s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+        select { color: #333; background: #fff; border: 1px solid #bdc3c7; cursor: pointer; }
         button:hover { opacity: 0.9; transform: translateY(-1px); }
         button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
         input[type="text"], input[type="password"], textarea { flex: 1; padding: 12px; border: 1px solid #bdc3c7; border-radius: 6px; font-size: 16px; box-sizing: border-box; width: 100%; }
@@ -62,7 +63,6 @@
         .popup-close:hover { color: var(--danger); }
         .ai-result-box { background: #f4f6f7; border-left: 4px solid var(--ai); padding: 15px; border-radius: 4px; font-size: 15px; line-height: 1.6; min-height: 100px; white-space: pre-wrap;}
 
-        /* 題庫列表樣式 */
         .vault-list { display: flex; flex-direction: column; gap: 15px; }
         .vault-item { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .vault-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
@@ -85,7 +85,7 @@
 <body>
 
 <div class="container">
-    <h1>🔬 高中化學講義素材整合工作站_V20 (資料安全版)</h1>
+    <h1>🔬 高中化學講義素材整合工作站_V21 (課綱素養版)</h1>
     
     <div class="tabs">
         <div class="tab active" onclick="switchTab('single')">深度探索</div>
@@ -107,8 +107,13 @@
             <div class="card">
                 <h3>2D 結構式</h3>
                 <img id="chemImage" class="result-img">
-                <div style="text-align: center; margin-top: 15px;">
+                <div style="text-align: center; margin-top: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
                     <button class="btn-success" onclick="downloadImage('chemImage', currentName)">⬇️ 下載圖片</button>
+                    <select id="quizDifficultySingle" style="padding: 10px; border-radius: 6px;">
+                        <option value="基礎 (著重化學名詞定義、基本觀念與基礎性質記憶)">🟢 基礎題</option>
+                        <option value="中等 (著重基礎計算、簡單情境應用與圖表分析)" selected>🟡 中等題</option>
+                        <option value="進階 (完全符合108課綱素養導向，著重跨單元整合、長文閱讀理解與實驗探究情境)">🔴 進階素養題</option>
+                    </select>
                     <button class="btn-ai" onclick="generateQuiz()">🤖 生成測驗</button>
                 </div>
             </div>
@@ -156,8 +161,13 @@
             <div class="card">
                 <h3>標準化 2D 結構</h3>
                 <img id="drawChemImage" class="result-img" src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=">
-                <div style="text-align: center; margin-top: 15px;">
+                <div style="text-align: center; margin-top: 15px; display: flex; justify-content: center; gap: 8px; flex-wrap: wrap;">
                     <button class="btn-success" onclick="downloadImage('drawChemImage', '自訂分子')">⬇️ 下載圖片</button>
+                    <select id="quizDifficultyDraw" style="padding: 10px; border-radius: 6px;">
+                        <option value="基礎 (著重化學名詞定義、基本觀念與基礎性質記憶)">🟢 基礎題</option>
+                        <option value="中等 (著重基礎計算、簡單情境應用與圖表分析)" selected>🟡 中等題</option>
+                        <option value="進階 (完全符合108課綱素養導向，著重跨單元整合、長文閱讀理解與實驗探究情境)">🔴 進階素養題</option>
+                    </select>
                     <button class="btn-ai" onclick="generateQuizFromCanvas()">🤖 生成測驗</button>
                 </div>
             </div>
@@ -217,9 +227,7 @@
                 <button class="btn-danger" onclick="clearVault()">⚠️ 清空所有資料</button>
             </div>
         </div>
-
-        <div id="vaultList" class="vault-list">
-            </div>
+        <div id="vaultList" class="vault-list"></div>
     </div>
 
     <div id="batch" class="tab-content">
@@ -244,7 +252,7 @@
     <div id="quizOverlay" class="overlay" onclick="this.style.display='none'">
         <div class="popup-card" onclick="event.stopPropagation()">
             <span class="popup-close" onclick="document.getElementById('quizOverlay').style.display='none'">&times;</span>
-            <h2 style="color: var(--ai); margin-top:0;">🤖 AI 化學隨堂測驗</h2>
+            <h2 style="color: var(--ai); margin-top:0;" id="modalQuizTitle">🤖 AI 化學隨堂測驗</h2>
             <div id="quizContent" style="line-height: 1.6; margin-bottom: 15px; max-height: 50vh; overflow-y: auto; padding-right: 10px;">正在撰寫中...</div>
             <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; padding-top: 15px;">
                 <button class="btn-outline" onclick="copyText('quizContent')">📋 複製文字</button>
@@ -284,7 +292,7 @@
         }
     }
 
-    // ====== API Key 管理 ======
+    // ====== API Key 管理系統 ======
     function openApiKeyModal() {
         document.getElementById('apiKeyValue').value = localStorage.getItem('gemini_api_key') || '';
         document.getElementById('apiOverlay').style.display = 'flex';
@@ -455,28 +463,20 @@
         } catch(e) {}
     }
 
-    // ====== V20 題庫與系統備份 (JSON / Word 匯出) ======
-    
-    // JSON 備份匯出
+    // ====== V21 題庫儲存與匯出機制 ======
     function exportBackupJSON() {
         const data = {
-            version: "V20",
-            export_date: new Date().toLocaleString(),
+            version: "V21", export_date: new Date().toLocaleString(),
             quiz_vault: JSON.parse(localStorage.getItem('quiz_vault') || '[]')
         };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
         saveAs(blob, `Chemistry_Tools_Backup_${Date.now()}.json`);
     }
 
-    // JSON 備份匯入 (觸發上傳)
-    function triggerBackupImport() {
-        document.getElementById('backupUploader').click();
-    }
+    function triggerBackupImport() { document.getElementById('backupUploader').click(); }
 
-    // JSON 備份匯入 (解析與覆蓋)
     function importBackupJSON(event) {
-        const file = event.target.files[0];
-        if (!file) return;
+        const file = event.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = function(e) {
             try {
@@ -489,7 +489,7 @@
                     }
                 } else { alert("❌ 錯誤：這不是有效的工作站備份檔案。"); }
             } catch (err) { alert("❌ 解析備份檔案失敗，檔案可能已損毀。"); }
-            event.target.value = ''; // reset uploader
+            event.target.value = '';
         };
         reader.readAsText(file);
     }
@@ -511,7 +511,6 @@
     function loadVault() {
         const vaultList = document.getElementById('vaultList');
         const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        
         if (vault.length === 0) {
             vaultList.innerHTML = '<div style="text-align:center; padding: 40px; color: #999;">📭 目前題庫是空的。<br>請先透過 AI 生成測驗並點擊「儲存至題庫」。</div>';
             return;
@@ -539,34 +538,21 @@
 
     function exportQuizTXT(id) {
         const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        const quiz = vault.find(q => q.id === id);
-        if (!quiz) return;
+        const quiz = vault.find(q => q.id === id); if (!quiz) return;
         const fileContent = `=================================\n【${quiz.title}】\n產生時間：${quiz.date}\n=================================\n\n${quiz.content}`;
         const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
         saveAs(blob, `${quiz.title}_測驗卷.txt`);
     }
 
-    // V20 核心功能：轉換為 MS Word (.doc) 格式
     function exportQuizWord(id) {
         const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        const quiz = vault.find(q => q.id === id);
-        if (!quiz) return;
+        const quiz = vault.find(q => q.id === id); if (!quiz) return;
 
-        // 建構微軟 Office 識別的 HTML 結構與命名空間
-        const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
-              "xmlns:w='urn:schemas-microsoft-com:office:word' "+
-              "xmlns='http://www.w3.org/TR/REC-html40'>"+
-              "<head><meta charset='utf-8'><title>化學測驗卷</title>"+
-              "<style>body { font-family: '微軟正黑體', Arial, sans-serif; line-height: 1.6; } h2 { color: #2c3e50; } hr { border: 0; border-top: 1px solid #ccc; }</style>"+
-              "</head><body>";
+        const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'><title>化學測驗卷</title><style>body { font-family: '微軟正黑體', Arial, sans-serif; line-height: 1.6; } h2 { color: #2c3e50; } hr { border: 0; border-top: 1px solid #ccc; }</style></head><body>";
         const footer = "</body></html>";
-        
-        // 將純文字的換行符號轉為 HTML 的 <br>
         const formattedContent = quiz.content.replace(/\n/g, '<br>');
-        
         const sourceHTML = header + "<h2>" + quiz.title + "</h2><p style='color:#666;'>產生時間：" + quiz.date + "</p><hr>" + formattedContent + footer;
 
-        // 加入 \ufeff (BOM) 確保 Word 能正確識別 UTF-8 中文
         const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
         saveAs(blob, `${quiz.title}_化學測驗.doc`);
     }
@@ -585,18 +571,41 @@
         loadVault();
     }
 
-    // ====== AI 呼叫 ======
+    // ====== V21 核心：108課綱 AI 測驗生成 ======
     function generateQuiz() {
         if(!currentCid && !currentSmiles) { alert("請先搜尋分子！"); return; }
-        currentQuizContext.title = `主題測驗：${currentName}`;
-        const prompt = `你是一位資深高中化學老師。請根據分子「${currentName} (SMILES: ${currentSmiles || '未知'})」，設計 3 題適合高中程度的選擇題（含核心概念、選項與正確答案解析）。請用繁體中文。`;
+        
+        const difficulty = document.getElementById('quizDifficultySingle').value;
+        currentQuizContext.title = `主題測驗：${currentName} (${difficulty.split('(')[0].trim()})`;
+        
+        // V21 Prompt 升級：明確納入 108 課綱與難度變數
+        const prompt = `你是一位深諳台灣「108課綱」核心素養的資深高中化學老師。
+請根據分子「${currentName} (SMILES: ${currentSmiles || '未知'})」，設計 3 題難度為【${difficulty}】的選擇題。
+要求：
+1. 嚴格遵守 108 課綱高中化學範圍，禁用大學超綱知識。
+2. 根據所選難度（基礎/中等/進階素養）調整題幹長度與跨單元整合度。
+3. 每題提供 A, B, C, D 選項，並在最後附上正確答案與簡單解析。
+請用繁體中文，排版清晰。`;
+        
+        document.getElementById('modalQuizTitle').innerHTML = `🤖 108課綱測驗生成中...`;
         callGemini(prompt, 'quizContent', true, true);
     }
 
     function generateQuizFromCanvas() {
         if(!jsmeApplet || !jsmeApplet.smiles()) { alert("畫布為空！"); return; }
-        currentQuizContext.title = `自訂畫布測驗：${jsmeApplet.smiles()}`;
-        const prompt = `你是一位資深高中化學老師。請根據此 SMILES 代碼分子「${jsmeApplet.smiles()}」，設計 3 題適合高中程度的選擇題（含選項與正確答案解析）。請用繁體中文。`;
+        
+        const difficulty = document.getElementById('quizDifficultyDraw').value;
+        currentQuizContext.title = `自訂畫布測驗 (${difficulty.split('(')[0].trim()})`;
+        
+        const prompt = `你是一位深諳台灣「108課綱」核心素養的資深高中化學老師。
+請根據此 SMILES 代碼分子「${jsmeApplet.smiles()}」，設計 3 題難度為【${difficulty}】的選擇題。
+要求：
+1. 嚴格遵守 108 課綱高中化學範圍，禁用大學超綱知識。
+2. 根據所選難度調整題型。
+3. 提供 A, B, C, D 選項，附上答案與解析。
+請用繁體中文。`;
+
+        document.getElementById('modalQuizTitle').innerHTML = `🤖 108課綱測驗生成中...`;
         callGemini(prompt, 'quizContent', true, true);
     }
 
@@ -630,12 +639,15 @@
             
             const data = await res.json();
             const textResponse = data.candidates[0].content.parts[0].text;
+            
             resultBox.innerHTML = textResponse.replace(/\n/g, '<br>');
             
             if(isQuiz) {
+                if(isModal) document.getElementById('modalQuizTitle').innerHTML = `🤖 AI 化學隨堂測驗`;
                 currentQuizContext.textContent = textResponse;
                 if(btnSave) btnSave.disabled = false;
             }
+
         } catch(e) {
             resultBox.innerHTML = `
                 <span style="color:red; font-weight:bold;">❌ 運算失敗：</span><br>
@@ -803,7 +815,7 @@
         status.innerHTML += `<br><b>完成！成功 ${successCount}/${names.length} 筆。</b>`;
         if (successCount > 0) {
             zip.generateAsync({type:"blob"}).then(content => {
-                saveAs(content, "講義素材包_V20.zip");
+                saveAs(content, "講義素材包_V21.zip");
                 status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`;
                 btn.disabled = false;
             });
@@ -812,3 +824,4 @@
 </script>
 </body>
 </html>
+
