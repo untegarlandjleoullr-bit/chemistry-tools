@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>高中化學講義素材整合工作站_V16</title>
+    <title>高中化學講義素材整合工作站_V17</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
@@ -74,7 +74,7 @@
 <body>
 
 <div class="container">
-    <h1>🔬 高中化學講義素材整合工作站_V16</h1>
+    <h1>🔬 高中化學講義素材整合工作站_V17</h1>
     
     <div class="tabs">
         <div class="tab active" onclick="switchTab('single')">深度探索</div>
@@ -230,6 +230,9 @@
     let viewer3D_single = null, viewer3D_draw = null;
     let jsmeApplet = null, drawDebounceTimer = null; 
     let currentCid = null, currentName = "", currentSmiles = "";
+    
+    // 用於快取自動偵測到的可用模型名稱，避免每次呼叫都重新查詢
+    let cachedModelName = "";
 
     window.onload = function() { 
         checkApiKeyStatus(); 
@@ -251,6 +254,7 @@
         const key = document.getElementById('apiKeyValue').value.trim();
         if (key) {
             localStorage.setItem('gemini_api_key', key);
+            cachedModelName = ""; // 重設模型快取
             document.getElementById('apiOverlay').style.display = 'none';
             checkApiKeyStatus();
             alert("✅ 金鑰已成功儲存！請再次點擊剛剛的操作。");
@@ -261,6 +265,7 @@
 
     function clearApiKey() {
         localStorage.removeItem('gemini_api_key');
+        cachedModelName = "";
         document.getElementById('apiKeyValue').value = '';
         document.getElementById('apiOverlay').style.display = 'none';
         checkApiKeyStatus();
@@ -279,15 +284,56 @@
         }
     }
 
+    // ====== V17 核心：AI 模型自動探索引擎 ======
+    async function getBestModel(apiKey) {
+        if (cachedModelName) return cachedModelName;
+        
+        try {
+            // 1. 向 Google 請求該帳號授權的所有模型清單
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
+            if (!res.ok) throw new Error("ListModels API Failed");
+            
+            const data = await res.json();
+            
+            // 2. 篩選出明確支援 generateContent 方法的模型
+            const validModels = data.models
+                .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
+                .map(m => m.name); // 例如 "models/gemini-1.5-pro"
+
+            // 3. 按照我們的偏好順序挑選 (新版優先)
+            const preferred = [
+                'models/gemini-1.5-flash', 
+                'models/gemini-1.5-pro', 
+                'models/gemini-1.5-flash-latest',
+                'models/gemini-pro',
+                'models/gemini-1.0-pro'
+            ];
+
+            let selectedModel = 'gemini-1.5-pro'; // 終極降級預設值
+            for (let p of preferred) {
+                if (validModels.includes(p)) {
+                    selectedModel = p.split('/')[1]; // 去除 'models/' 前綴
+                    break;
+                }
+            }
+            
+            cachedModelName = selectedModel;
+            console.log("自動探索引擎已選定最佳模型：", selectedModel);
+            return selectedModel;
+
+        } catch (e) {
+            console.warn("模型探索失敗，採用預設模型", e);
+            return 'gemini-1.5-pro'; // 若連線異常，給予一個最常見的預設值
+        }
+    }
+
     // ====== 中英轉譯引擎 ======
     async function translateViaWikipedia(chineseName) {
         try {
             const res = await fetch(WIKI_API + encodeURIComponent(chineseName));
             const data = await res.json();
             const pageId = Object.keys(data.query.pages)[0];
-            if (pageId !== "-1" && data.query.pages[pageId].langlinks) {
-                return data.query.pages[pageId].langlinks[0]['*'];
-            }
+            if (pageId !== "-1" && data.query.pages[pageId].langlinks) return data.query.pages[pageId].langlinks[0]['*'];
             return null;
         } catch (e) { return null; }
     }
@@ -333,9 +379,7 @@
         document.getElementById('chemName').value = "";
         document.getElementById('singleStatus').innerHTML = "";
         document.getElementById('dashboardArea').style.display = "none";
-        currentCid = null;
-        currentName = "";
-        currentSmiles = "";
+        currentCid = null; currentName = ""; currentSmiles = "";
     }
 
     async function searchSingle() {
@@ -345,24 +389,16 @@
         const btn = document.getElementById('searchBtn');
 
         if (!name) { status.textContent = "請輸入名稱！"; return; }
-        
-        status.innerHTML = `🔄 查詢中...`;
-        status.style.color = "#333";
-        dash.style.display = "none"; 
-        btn.disabled = true;
-        currentSmiles = ""; 
+        status.innerHTML = `🔄 查詢中...`; status.style.color = "#333";
+        dash.style.display = "none"; btn.disabled = true; currentSmiles = ""; 
 
         const result = await smartGetCid(name, 'singleStatus');
         if (!result) {
             status.textContent = `❌ 找不到「${name}」的資料。`;
-            status.style.color = "#e74c3c";
-            btn.disabled = false;
-            return;
+            status.style.color = "#e74c3c"; btn.disabled = false; return;
         }
 
-        currentCid = result.cid;
-        currentName = result.finalName; 
-        
+        currentCid = result.cid; currentName = result.finalName; 
         document.getElementById('td_queryname').textContent = `${name} (解析為: ${currentName})`;
         document.getElementById('td_iupac').textContent = "載入中...";
         document.getElementById('td_formula').textContent = "載入中...";
@@ -371,8 +407,7 @@
         document.getElementById('chemImage').src = `${PUBCHEM_API}/compound/cid/${currentCid}/PNG?record_type=2d&image_size=large`;
         
         dash.style.display = "grid"; 
-        status.innerHTML = `✅ 解析完成！`;
-        status.style.color = "#2ecc71";
+        status.innerHTML = `✅ 解析完成！`; status.style.color = "#2ecc71";
         btn.disabled = false;
 
         load3DAsync(currentCid, 'viewer_3D', 'viewer3D_single');
@@ -382,19 +417,15 @@
     async function load3DAsync(cid, elementId, viewerRef) {
         const viewerDiv = document.getElementById(elementId);
         if (!window[viewerRef]) window[viewerRef] = $3Dmol.createViewer(viewerDiv, { backgroundColor: 'white' });
-        const viewer = window[viewerRef];
-        viewer.clear();
+        const viewer = window[viewerRef]; viewer.clear();
         try {
             const res = await fetch(`${PUBCHEM_API}/compound/cid/${cid}/record/SDF/?record_type=3d`);
             if (res.ok) {
                 viewer.addModel(await res.text(), "sdf");
                 viewer.setStyle({}, { stick: { radius: 0.15 }, sphere: { scale: 0.3 } });
-                viewer.zoomTo();
-                viewer.render();
-            } else {
-                viewerDiv.innerHTML = "<p style='text-align:center; margin-top:100px; color:#95a5a6;'>⚠️ 暫無 3D 座標</p>";
-            }
-        } catch(e) { console.error(e); }
+                viewer.zoomTo(); viewer.render();
+            } else { viewerDiv.innerHTML = "<p style='text-align:center; margin-top:100px; color:#95a5a6;'>⚠️ 暫無 3D 座標</p>"; }
+        } catch(e) {}
     }
 
     async function loadPropertiesAsync(cid, context) {
@@ -406,17 +437,16 @@
                     document.getElementById('td_iupac').textContent = props.IUPACName || "無";
                     document.getElementById('td_formula').textContent = props.MolecularFormula || "無";
                     document.getElementById('td_weight').textContent = props.MolecularWeight ? props.MolecularWeight + " g/mol" : "無";
-                    currentSmiles = props.CanonicalSMILES || "";
-                    document.getElementById('td_smiles').textContent = currentSmiles;
+                    currentSmiles = props.CanonicalSMILES || ""; document.getElementById('td_smiles').textContent = currentSmiles;
                 } else if (context === 'draw') {
                     document.getElementById('td_draw_iupac').textContent = props.IUPACName || "無";
                     document.getElementById('td_draw_weight').textContent = props.MolecularWeight ? props.MolecularWeight + " g/mol" : "無";
                 }
             }
-        } catch(e) { console.error(e); }
+        } catch(e) {}
     }
 
-    // ====== AI 測驗生成與通用呼叫 (V16 API URL 修復) ======
+    // ====== AI 測驗生成與通用呼叫 ======
     function generateQuiz() {
         if(!currentCid && !currentSmiles) { alert("請先搜尋分子！"); return; }
         const prompt = `你是一位資深高中化學老師。請根據分子「${currentName} (SMILES: ${currentSmiles || '未知'})」，設計 3 題適合高中程度的選擇題（含核心概念、選項與正確答案解析）。請用繁體中文。`;
@@ -431,19 +461,19 @@
 
     async function callGemini(prompt, resultBoxId, isModal = false) {
         const apiKey = localStorage.getItem('gemini_api_key');
-        if(!apiKey) { 
-            openApiKeyModal();
-            return; 
-        }
+        if(!apiKey) { openApiKeyModal(); return; }
         
         if(isModal) document.getElementById('quizOverlay').style.display = "flex";
         
         const resultBox = document.getElementById(resultBoxId);
-        resultBox.innerHTML = '<span style="color:#f39c12">🔄 AI 正在高速運算中，請稍候...</span>';
+        resultBox.innerHTML = '<span style="color:#f39c12">🔄 正在偵測可用 AI 模型...</span>';
         
         try {
-            // V16 核心修正：將模型變更為 gemini-1.5-flash-latest，解決 404 not found 問題
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+            // V17 核心：動態取得可用模型名稱
+            const modelName = await getBestModel(apiKey);
+            resultBox.innerHTML = `<span style="color:#f39c12">🔄 模型已選定 (${modelName})，正在高速運算中...</span>`;
+            
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.2 } })
@@ -459,11 +489,7 @@
         } catch(e) {
             resultBox.innerHTML = `
                 <span style="color:red; font-weight:bold;">❌ 運算失敗：</span><br>
-                <span style="color:#c0392b;">${e.message}</span><br><br>
-                <span style="font-size:13px; color:#666; line-height: 1.6;">
-                <b>💡 系統提示：</b><br>
-                若您持續看到此錯誤，請確認金鑰是否完整，或嘗試改用個人 Gmail 申請的新金鑰。
-                </span>`;
+                <span style="color:#c0392b;">${e.message}</span>`;
         }
     }
 
@@ -525,14 +551,11 @@
         } catch(e) { badge.className = "sync-indicator"; badge.style.background = "#e74c3c"; badge.innerHTML = "❌ 查無標準分子"; }
     }
     
-    // AI 視覺上傳 (V16 API URL 修復)
+    // AI 視覺上傳
     async function handleAIVisionUpload(event) {
         const file = event.target.files[0]; if(!file) return; event.target.value = '';
         const apiKey = localStorage.getItem('gemini_api_key');
-        if(!apiKey) { 
-            openApiKeyModal(); 
-            return; 
-        }
+        if(!apiKey) { openApiKeyModal(); return; }
         
         const syncBadge = document.getElementById('syncStatus');
         syncBadge.className = "sync-indicator sync-active";
@@ -540,8 +563,11 @@
         
         try {
             const b64 = await new Promise(r => { const rd=new FileReader(); rd.onload=()=>r(rd.result); rd.readAsDataURL(file); });
-            // V16 核心修正
-            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`, {
+            
+            // V17 核心：動態選定支援視覺的模型
+            const modelName = await getBestModel(apiKey);
+
+            const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`, {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({ contents: [{ parts: [{text: "辨識圖中化學分子，僅輸出SMILES代碼，不含markdown格式。失敗輸出ERROR。"}, {inline_data: {mime_type: file.type, data: b64.split(',')[1]}}] }] })
             });
@@ -559,7 +585,7 @@
             syncBadge.className = "sync-indicator";
             syncBadge.style.background = "#e74c3c";
             syncBadge.innerHTML = "❌ 辨識失敗";
-            alert(`AI 辨識發生錯誤：\n${e.message}\n\n(提示：請確認您的 API 金鑰是否有效)`); 
+            alert(`AI 辨識發生錯誤：\n${e.message}`); 
         }
     }
 
@@ -627,7 +653,7 @@
         status.innerHTML += `<br><b>完成！成功 ${successCount}/${names.length} 筆。</b>`;
         if (successCount > 0) {
             zip.generateAsync({type:"blob"}).then(content => {
-                saveAs(content, "講義素材包_V16.zip");
+                saveAs(content, "講義素材包_V17.zip");
                 status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`;
                 btn.disabled = false;
             });
