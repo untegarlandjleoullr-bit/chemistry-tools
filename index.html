@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>高中化學講義素材整合工作站_V19</title>
+    <title>高中化學講義素材整合工作站_V20</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
@@ -62,7 +62,7 @@
         .popup-close:hover { color: var(--danger); }
         .ai-result-box { background: #f4f6f7; border-left: 4px solid var(--ai); padding: 15px; border-radius: 4px; font-size: 15px; line-height: 1.6; min-height: 100px; white-space: pre-wrap;}
 
-        /* V19 題庫列表樣式 */
+        /* 題庫列表樣式 */
         .vault-list { display: flex; flex-direction: column; gap: 15px; }
         .vault-item { background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .vault-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; }
@@ -77,15 +77,15 @@
             .toolbar > * { width: 100%; margin-left: 0 !important; }
             #jsme_container { height: 350px; }
             .vault-header { flex-direction: column; align-items: flex-start; gap: 10px; }
-            .vault-actions { width: 100%; }
-            .vault-actions button { flex: 1; }
+            .vault-actions { width: 100%; flex-wrap: wrap; }
+            .vault-actions button { flex: 1; min-width: 30%; }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>🔬 高中化學素材工作站_V19 (數位資產版)</h1>
+    <h1>🔬 高中化學講義素材整合工作站_V20 (資料安全版)</h1>
     
     <div class="tabs">
         <div class="tab active" onclick="switchTab('single')">深度探索</div>
@@ -178,7 +178,6 @@
     <div id="calc" class="tab-content">
         <div class="card card-full" style="margin-bottom: 20px;">
             <h3 style="border-left-color: var(--ai); color: var(--ai);">⚗️ 反應式配平精靈</h3>
-            <p style="color:#666; font-size:14px;">輸入未平衡的反應式，AI 將自動配平並提供反應類型解析。</p>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="equationInput" placeholder="例: H2 + O2 = H2O 或 C6H12O6 + O2 -> CO2 + H2O">
                 <button class="btn-ai" onclick="solveEquation()">自動配平</button>
@@ -188,7 +187,6 @@
 
         <div class="card card-full" style="margin-bottom: 20px;">
             <h3 style="border-left-color: var(--warning); color: var(--warning);">⚖️ 限量試劑與產率引擎</h3>
-            <p style="color:#666; font-size:14px;">輸入反應物與各自的質量/莫耳數，找出限量試劑並計算理論產率。</p>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="limitingInput" placeholder="例: 10g H2 與 50g O2 反應生成 H2O">
                 <button class="btn-warning" onclick="analyzeLimitingReactant()">產率分析</button>
@@ -198,7 +196,6 @@
 
         <div class="card card-full">
             <h3 style="border-left-color: var(--info); color: var(--info);">📊 元素質量百分比分析</h3>
-            <p style="color:#666; font-size:14px;">輸入化學式或 SMILES，精算分子量與各元素質量占比。</p>
             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                 <input type="text" id="stoichInput" placeholder="例: C9H8O4 (阿斯匹靈) 或 CCO (乙醇)">
                 <button class="btn-info" onclick="analyzeStoichiometry()">開始精算</button>
@@ -208,10 +205,19 @@
     </div>
 
     <div id="vault" class="tab-content">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <p style="color: #555; margin: 0;">這裡存放您由 AI 生成並儲存的所有測驗題目。資料安全地保存在您的瀏覽器中。</p>
-            <button class="btn-danger" onclick="clearVault()">⚠️ 清空所有題庫</button>
+        <div style="background: #ecf0f1; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+                <b style="color:var(--primary); font-size:16px;">🛡️ 題庫與系統備份</b><br>
+                <span style="font-size:13px; color:#666;">完整下載 JSON 格式備份，或在其他電腦還原您的資料。</span>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="btn-outline" style="color:var(--primary); border-color:var(--primary);" onclick="exportBackupJSON()">📦 匯出備份 (JSON)</button>
+                <button class="btn-outline" style="color:var(--primary); border-color:var(--primary);" onclick="triggerBackupImport()">📥 匯入備份</button>
+                <input type="file" id="backupUploader" accept=".json" style="display:none;" onchange="importBackupJSON(event)">
+                <button class="btn-danger" onclick="clearVault()">⚠️ 清空所有資料</button>
+            </div>
         </div>
+
         <div id="vaultList" class="vault-list">
             </div>
     </div>
@@ -241,7 +247,7 @@
             <h2 style="color: var(--ai); margin-top:0;">🤖 AI 化學隨堂測驗</h2>
             <div id="quizContent" style="line-height: 1.6; margin-bottom: 15px; max-height: 50vh; overflow-y: auto; padding-right: 10px;">正在撰寫中...</div>
             <div style="display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid #eee; padding-top: 15px;">
-                <button class="btn-outline" onclick="copyText('quizContent')">📋 複製</button>
+                <button class="btn-outline" onclick="copyText('quizContent')">📋 複製文字</button>
                 <button class="btn-ai" onclick="saveQuizToVault()" id="saveQuizBtn" disabled>💾 儲存至本機題庫</button>
             </div>
         </div>
@@ -266,7 +272,6 @@
     let currentCid = null, currentName = "", currentSmiles = "";
     let cachedModelName = "";
     
-    // V19 用於暫存當前生成的測驗標題與純文本內容
     let currentQuizContext = { title: "", textContent: "" };
 
     window.onload = function() { 
@@ -279,7 +284,7 @@
         }
     }
 
-    // ====== API Key 管理系統 ======
+    // ====== API Key 管理 ======
     function openApiKeyModal() {
         document.getElementById('apiKeyValue').value = localStorage.getItem('gemini_api_key') || '';
         document.getElementById('apiOverlay').style.display = 'flex';
@@ -293,9 +298,7 @@
             document.getElementById('apiOverlay').style.display = 'none';
             checkApiKeyStatus();
             alert("✅ 金鑰已成功儲存！請再次執行您的操作。");
-        } else {
-            alert("請輸入有效的金鑰");
-        }
+        } else { alert("請輸入有效的金鑰"); }
     }
 
     function clearApiKey() {
@@ -310,33 +313,21 @@
     function checkApiKeyStatus() {
         const key = localStorage.getItem('gemini_api_key');
         const btn = document.getElementById('apiKeyBtn');
-        if (key) {
-            btn.innerHTML = "✅ 金鑰已設定";
-            btn.style.backgroundColor = "#2ecc71";
-        } else {
-            btn.innerHTML = "🔑 設定金鑰";
-            btn.style.backgroundColor = "#34495e";
-        }
+        if (key) { btn.innerHTML = "✅ 金鑰已設定"; btn.style.backgroundColor = "#2ecc71"; } 
+        else { btn.innerHTML = "🔑 設定金鑰"; btn.style.backgroundColor = "#34495e"; }
     }
 
-    // ====== AI 模型探索引擎 ======
     async function getBestModel(apiKey) {
         if (cachedModelName) return cachedModelName;
         try {
             const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`);
             if (!res.ok) throw new Error("ListModels 失敗");
             const data = await res.json();
-            
-            const validModels = data.models
-                .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent"))
-                .map(m => m.name);
-
+            const validModels = data.models.filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes("generateContent")).map(m => m.name);
             const preferred = ['models/gemini-2.5-flash', 'models/gemini-2.5-pro', 'models/gemini-2.0-flash', 'models/gemini-1.5-pro'];
 
             let selectedModel = null;
-            for (let p of preferred) {
-                if (validModels.includes(p)) { selectedModel = p.split('/')[1]; break; }
-            }
+            for (let p of preferred) { if (validModels.includes(p)) { selectedModel = p.split('/')[1]; break; } }
             if (!selectedModel && validModels.length > 0) selectedModel = validModels[0].split('/')[1];
             if (!selectedModel) selectedModel = 'gemini-2.5-flash';
 
@@ -345,7 +336,7 @@
         } catch (e) { return 'gemini-2.5-flash'; }
     }
 
-    // ====== 中英轉譯引擎 ======
+    // ====== 中英轉譯 ======
     async function translateViaWikipedia(chineseName) {
         try {
             const res = await fetch(WIKI_API + encodeURIComponent(chineseName));
@@ -464,7 +455,137 @@
         } catch(e) {}
     }
 
-    // ====== AI 測驗生成與管理 (V19 擴充) ======
+    // ====== V20 題庫與系統備份 (JSON / Word 匯出) ======
+    
+    // JSON 備份匯出
+    function exportBackupJSON() {
+        const data = {
+            version: "V20",
+            export_date: new Date().toLocaleString(),
+            quiz_vault: JSON.parse(localStorage.getItem('quiz_vault') || '[]')
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        saveAs(blob, `Chemistry_Tools_Backup_${Date.now()}.json`);
+    }
+
+    // JSON 備份匯入 (觸發上傳)
+    function triggerBackupImport() {
+        document.getElementById('backupUploader').click();
+    }
+
+    // JSON 備份匯入 (解析與覆蓋)
+    function importBackupJSON(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (data.quiz_vault) {
+                    if(confirm("⚠️ 警告：匯入備份將【完全覆蓋】您目前瀏覽器中的題庫資料。\n確定要繼續還原嗎？")) {
+                        localStorage.setItem('quiz_vault', JSON.stringify(data.quiz_vault));
+                        loadVault();
+                        alert("✅ 系統備份已成功還原！");
+                    }
+                } else { alert("❌ 錯誤：這不是有效的工作站備份檔案。"); }
+            } catch (err) { alert("❌ 解析備份檔案失敗，檔案可能已損毀。"); }
+            event.target.value = ''; // reset uploader
+        };
+        reader.readAsText(file);
+    }
+
+    function saveQuizToVault() {
+        if (!currentQuizContext.textContent) return;
+        let vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
+        const newQuiz = {
+            id: Date.now().toString(), date: new Date().toLocaleString(),
+            title: currentQuizContext.title, content: currentQuizContext.textContent
+        };
+        vault.unshift(newQuiz);
+        localStorage.setItem('quiz_vault', JSON.stringify(vault));
+        alert("✅ 測驗已成功儲存至本機題庫！");
+        document.getElementById('quizOverlay').style.display = 'none';
+        if(document.getElementById('vault').classList.contains('active')) loadVault();
+    }
+
+    function loadVault() {
+        const vaultList = document.getElementById('vaultList');
+        const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
+        
+        if (vault.length === 0) {
+            vaultList.innerHTML = '<div style="text-align:center; padding: 40px; color: #999;">📭 目前題庫是空的。<br>請先透過 AI 生成測驗並點擊「儲存至題庫」。</div>';
+            return;
+        }
+
+        let html = '';
+        vault.forEach(quiz => {
+            const preview = quiz.content.substring(0, 120).replace(/\n/g, ' ') + '...';
+            html += `
+                <div class="vault-item" id="quiz-${quiz.id}">
+                    <div class="vault-header">
+                        <div><div class="vault-title">${quiz.title}</div><div class="vault-date">建立時間：${quiz.date}</div></div>
+                        <div class="vault-actions">
+                            <button class="btn-success" onclick="exportQuizTXT('${quiz.id}')" style="padding: 8px 12px; font-size: 13px;">📄 TXT</button>
+                            <button class="btn-info" onclick="exportQuizWord('${quiz.id}')" style="padding: 8px 12px; font-size: 13px; background-color: #2980b9;">📝 Word</button>
+                            <button class="btn-outline" style="color:var(--danger); border-color:var(--danger); padding: 8px 12px; font-size: 13px;" onclick="deleteQuiz('${quiz.id}')">🗑️ 刪除</button>
+                        </div>
+                    </div>
+                    <div style="font-size: 14px; color: #666; line-height: 1.5; background: #f8f9fa; padding: 10px; border-radius: 4px;">${preview}</div>
+                </div>
+            `;
+        });
+        vaultList.innerHTML = html;
+    }
+
+    function exportQuizTXT(id) {
+        const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
+        const quiz = vault.find(q => q.id === id);
+        if (!quiz) return;
+        const fileContent = `=================================\n【${quiz.title}】\n產生時間：${quiz.date}\n=================================\n\n${quiz.content}`;
+        const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
+        saveAs(blob, `${quiz.title}_測驗卷.txt`);
+    }
+
+    // V20 核心功能：轉換為 MS Word (.doc) 格式
+    function exportQuizWord(id) {
+        const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
+        const quiz = vault.find(q => q.id === id);
+        if (!quiz) return;
+
+        // 建構微軟 Office 識別的 HTML 結構與命名空間
+        const header = "<html xmlns:o='urn:schemas-microsoft-com:office:office' "+
+              "xmlns:w='urn:schemas-microsoft-com:office:word' "+
+              "xmlns='http://www.w3.org/TR/REC-html40'>"+
+              "<head><meta charset='utf-8'><title>化學測驗卷</title>"+
+              "<style>body { font-family: '微軟正黑體', Arial, sans-serif; line-height: 1.6; } h2 { color: #2c3e50; } hr { border: 0; border-top: 1px solid #ccc; }</style>"+
+              "</head><body>";
+        const footer = "</body></html>";
+        
+        // 將純文字的換行符號轉為 HTML 的 <br>
+        const formattedContent = quiz.content.replace(/\n/g, '<br>');
+        
+        const sourceHTML = header + "<h2>" + quiz.title + "</h2><p style='color:#666;'>產生時間：" + quiz.date + "</p><hr>" + formattedContent + footer;
+
+        // 加入 \ufeff (BOM) 確保 Word 能正確識別 UTF-8 中文
+        const blob = new Blob(['\ufeff', sourceHTML], { type: 'application/msword' });
+        saveAs(blob, `${quiz.title}_化學測驗.doc`);
+    }
+
+    function deleteQuiz(id) {
+        if(!confirm("確定要刪除這筆測驗紀錄嗎？")) return;
+        let vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
+        vault = vault.filter(q => q.id !== id);
+        localStorage.setItem('quiz_vault', JSON.stringify(vault));
+        loadVault();
+    }
+
+    function clearVault() {
+        if(!confirm("⚠️ 嚴重警告：確定要清空所有儲存的題庫嗎？此操作無法復原！\n(建議先使用『匯出備份 JSON』功能)")) return;
+        localStorage.removeItem('quiz_vault');
+        loadVault();
+    }
+
+    // ====== AI 呼叫 ======
     function generateQuiz() {
         if(!currentCid && !currentSmiles) { alert("請先搜尋分子！"); return; }
         currentQuizContext.title = `主題測驗：${currentName}`;
@@ -479,91 +600,6 @@
         callGemini(prompt, 'quizContent', true, true);
     }
 
-    // ====== V19 新增：題庫儲存與匯出機制 ======
-    function saveQuizToVault() {
-        if (!currentQuizContext.textContent) return;
-        
-        let vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        const newQuiz = {
-            id: Date.now().toString(),
-            date: new Date().toLocaleString(),
-            title: currentQuizContext.title,
-            content: currentQuizContext.textContent
-        };
-        
-        vault.unshift(newQuiz); // 放最前面
-        localStorage.setItem('quiz_vault', JSON.stringify(vault));
-        
-        alert("✅ 測驗已成功儲存至本機題庫！");
-        document.getElementById('quizOverlay').style.display = 'none';
-        
-        // 如果目前在題庫頁籤，就重新整理列表
-        if(document.getElementById('vault').classList.contains('active')) {
-            loadVault();
-        }
-    }
-
-    function loadVault() {
-        const vaultList = document.getElementById('vaultList');
-        const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        
-        if (vault.length === 0) {
-            vaultList.innerHTML = '<div style="text-align:center; padding: 40px; color: #999;">📭 目前題庫是空的。<br>請先透過 AI 生成測驗並點擊「儲存至題庫」。</div>';
-            return;
-        }
-
-        let html = '';
-        vault.forEach(quiz => {
-            // 預覽前 100 個字
-            const preview = quiz.content.substring(0, 100).replace(/\n/g, ' ') + '...';
-            html += `
-                <div class="vault-item" id="quiz-${quiz.id}">
-                    <div class="vault-header">
-                        <div>
-                            <div class="vault-title">${quiz.title}</div>
-                            <div class="vault-date">建立時間：${quiz.date}</div>
-                        </div>
-                        <div class="vault-actions">
-                            <button class="btn-success" onclick="exportQuiz('${quiz.id}')">⬇️ 匯出 TXT</button>
-                            <button class="btn-outline" style="color:var(--danger); border-color:var(--danger);" onclick="deleteQuiz('${quiz.id}')">刪除</button>
-                        </div>
-                    </div>
-                    <div style="font-size: 14px; color: #666; line-height: 1.5; background: #f8f9fa; padding: 10px; border-radius: 4px;">
-                        ${preview}
-                    </div>
-                </div>
-            `;
-        });
-        vaultList.innerHTML = html;
-    }
-
-    function exportQuiz(id) {
-        const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        const quiz = vault.find(q => q.id === id);
-        if (!quiz) return;
-
-        // 加上檔頭資訊
-        const fileContent = `=================================\n【${quiz.title}】\n產生時間：${quiz.date}\n=================================\n\n${quiz.content}`;
-        
-        const blob = new Blob([fileContent], { type: "text/plain;charset=utf-8" });
-        saveAs(blob, `${quiz.title}_測驗卷.txt`);
-    }
-
-    function deleteQuiz(id) {
-        if(!confirm("確定要刪除這筆測驗紀錄嗎？")) return;
-        let vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        vault = vault.filter(q => q.id !== id);
-        localStorage.setItem('quiz_vault', JSON.stringify(vault));
-        loadVault();
-    }
-
-    function clearVault() {
-        if(!confirm("⚠️ 警告：確定要清空所有儲存的題庫嗎？此操作無法復原！")) return;
-        localStorage.removeItem('quiz_vault');
-        loadVault();
-    }
-
-    // ====== 通用 AI 呼叫 ======
     async function callGemini(prompt, resultBoxId, isModal = false, isQuiz = false) {
         const apiKey = localStorage.getItem('gemini_api_key');
         if(!apiKey) { openApiKeyModal(); return; }
@@ -594,15 +630,12 @@
             
             const data = await res.json();
             const textResponse = data.candidates[0].content.parts[0].text;
-            
             resultBox.innerHTML = textResponse.replace(/\n/g, '<br>');
             
-            // 若是測驗生成，則解鎖儲存按鈕並暫存純文本
             if(isQuiz) {
                 currentQuizContext.textContent = textResponse;
                 if(btnSave) btnSave.disabled = false;
             }
-
         } catch(e) {
             resultBox.innerHTML = `
                 <span style="color:red; font-weight:bold;">❌ 運算失敗：</span><br>
@@ -610,7 +643,7 @@
         }
     }
 
-    // ====== 進階運算 (V19 新增限量試劑) ======
+    // ====== 進階運算 ======
     function solveEquation() {
         const eq = document.getElementById('equationInput').value.trim();
         if(!eq) return;
@@ -675,7 +708,6 @@
         } catch(e) { badge.className = "sync-indicator"; badge.style.background = "#e74c3c"; badge.innerHTML = "❌ 查無標準分子"; }
     }
     
-    // AI 視覺上傳
     async function handleAIVisionUpload(event) {
         const file = event.target.files[0]; if(!file) return; event.target.value = '';
         const apiKey = localStorage.getItem('gemini_api_key');
@@ -710,7 +742,7 @@
     // ====== 輔助功能 ======
     function showAR() {
         if (window.location.protocol === 'file:') {
-            alert("【本機防呆提示】\nAR 投影需要將網頁上傳到網路上 (例如 GitHub Pages)。\n您目前在桌面開啟 (file:///)，手機無法掃描連線您的硬碟喔！");
+            alert("【本機防呆提示】\nAR 投影需要上傳至網頁伺服器。\n您目前在桌面開啟 (file:///)，手機無法連線您的硬碟！");
             return;
         }
         const arOverlay = document.getElementById('arOverlay');
@@ -771,7 +803,7 @@
         status.innerHTML += `<br><b>完成！成功 ${successCount}/${names.length} 筆。</b>`;
         if (successCount > 0) {
             zip.generateAsync({type:"blob"}).then(content => {
-                saveAs(content, "講義素材包_V19.zip");
+                saveAs(content, "講義素材包_V20.zip");
                 status.innerHTML += `<br><span style="color:green;">✅ ZIP 已下載！</span>`;
                 btn.disabled = false;
             });
