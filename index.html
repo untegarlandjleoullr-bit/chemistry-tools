@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="referrer" content="no-referrer">
-    <title>高中化學講義素材整合工作站_V4.27 (題庫進化穩定版)</title>
+    <title>高中化學講義素材整合工作站_V4.30 (終極黃金版)</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -200,11 +200,11 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <nav class="sidebar" id="sidebar">
-        <div class="sidebar-header">🧪 化學工作站 V4.27</div>
+        <div class="sidebar-header">🧪 化學工作站 V4.30</div>
         <div class="nav-group">核心繪圖與探索</div>
         <div class="nav-item active" onclick="switchView('view-draw')">✏️ AI 與畫布繪圖</div>
-        <div class="nav-item" onclick="switchView('view-single')">🔍 深度探索與比較 <span style="background:var(--danger); color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:auto;">GHS</span></div>
-        <div class="nav-item" onclick="switchView('view-periodic')">📊 118 互動週期表 <span style="background:var(--danger); color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:auto;">擴充</span></div>
+        <div class="nav-item" onclick="switchView('view-single')">🔍 深度探索與比較 <span style="background:var(--danger); color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:auto;">GHS API</span></div>
+        <div class="nav-item" onclick="switchView('view-periodic')">📊 118 互動週期表</div>
         <div class="nav-group">教學資料與實驗</div>
         <div class="nav-item" onclick="switchView('view-reaction')">⚗️ 經典反應資料庫</div>
         <div class="nav-item" onclick="switchView('view-lab')">🔬 虛擬實驗室 Pro</div>
@@ -213,7 +213,7 @@
         <div class="nav-item" onclick="switchView('view-calc')">⚖️ 進階運算解析</div>
         <div class="nav-item" onclick="switchView('view-news')">📰 時事探究報告</div>
         <div class="nav-group">資產與工具</div>
-        <div class="nav-item" onclick="switchView('view-vault')">🗄️ 數位題庫保險箱 <span style="background:var(--success); color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:auto;">防護</span></div>
+        <div class="nav-item" onclick="switchView('view-vault')">🗄️ 數位題庫保險箱</div>
         <div class="nav-item" onclick="switchView('view-batch')">📦 批量圖檔下載</div>
         
         <div class="nav-group">🛠️ 系統設定</div>
@@ -297,7 +297,9 @@
                             <div id="viewer_3D_A" class="viewer-3d" style="margin-top:15px; height:220px; min-height:220px;"></div>
                             
                             <table class="data-table" style="margin-top: 15px;"><tr><th>IUPAC</th><td id="td_iupacA">-</td></tr><tr><th>分子式</th><td id="td_formulaA">-</td></tr><tr><th>分子量</th><td id="td_weightA">-</td></tr></table>
+                            
                             <div id="ghsContainerA"></div>
+
                             <div id="radarChartA" style="height: 250px; margin-top:15px;"></div>
                         </div>
                     </div>
@@ -306,9 +308,10 @@
                             <h3 style="justify-content: space-between; color: var(--rose); border-left-color: var(--rose);"><span id="titleB">對照組 B</span><button class="btn-outline btn-sm" onclick="addFavorite(currentNameB, currentCidB)">⭐ 收藏</button></h3>
                             <img id="chemImageB" style="width:100%; max-height:200px; object-fit:contain;">
                             <div id="viewer_3D_B" class="viewer-3d" style="margin-top:15px; height:220px; min-height:220px;"></div>
-                            
                             <table class="data-table" style="margin-top: 15px;"><tr><th>IUPAC</th><td id="td_iupacB">-</td></tr><tr><th>分子式</th><td id="td_formulaB">-</td></tr><tr><th>分子量</th><td id="td_weightB">-</td></tr></table>
+                            
                             <div id="ghsContainerB"></div>
+
                             <div id="radarChartB" style="height: 250px; margin-top:15px;"></div>
                         </div>
                     </div>
@@ -551,8 +554,7 @@
                         <input type="text" id="vaultSearchInput" placeholder="🔍 搜尋題庫標題或內容關鍵字..." onkeyup="loadVault()" style="flex:1; border-color: var(--secondary);">
                     </div>
                     <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 8px; font-weight: bold;">🏷️ 快速標籤篩選 (點擊過濾)：</div>
-                    <div class="tag-cloud" id="vaultTagCloud" style="margin-bottom: 0;">
-                        </div>
+                    <div class="tag-cloud" id="vaultTagCloud" style="margin-bottom: 0;"></div>
                 </div>
 
                 <div id="vaultList" class="vault-list"></div>
@@ -623,39 +625,38 @@
     let currentQuizContext = { title: "", textContent: "" };
     let isAutoH = false; 
 
-    // ====== 保留 V4.26 鎖定的全部資料庫 ======
+    // ====== 保留 V4.27 鎖定的全部資料庫 ======
     const commonChemicals = ['水', '二氧化碳', '氯化鈉', '鹽酸', '氫氧化鈉', '硫酸', '硝酸', '氨氣', '甲烷', '乙醇', '乙酸', '苯', '阿斯匹靈', '葡萄糖', '尿素', '三聚氰胺', '維生素C', '咖啡因', '高錳酸鉀', '重鉻酸鉀', '乙酸乙酯', '丙酮', '甲醇', '碳酸鈣'];
     const reactionDB = [ { id: 'r1', name: '1. 酯化反應 (Esterification)', cat: '有機化學', syllabus: 'CJb-Vc-4', eq: '$ \\text{R-COOH} + \\text{R\'-OH} \\rightleftharpoons \\text{R-COOR\'} + \\text{H}_2\\text{O} $', desc: '酸與醇在濃硫酸催化及加熱下生成酯與水，為一可逆反應。濃硫酸擔任催化劑與脫水劑。' }, { id: 'r2', name: '2. 皂化反應 (Saponification)', cat: '有機化學', syllabus: 'CJb-Vc-4', eq: '$ \\text{油脂 (三酸甘油酯)} + 3\\text{NaOH} \\rightarrow \\text{甘油} + 3\\text{脂肪酸鈉 (肥皂)} $', desc: '油脂在鹼性環境下水解，生成甘油與脂肪酸鹽。加入飽和食鹽水可使肥皂析出(鹽析)。' }, { id: 'r3', name: '3. 銀鏡反應 (Tollens\' Test)', cat: '有機化學', syllabus: 'CJb-Vc-5', eq: '$ \\text{R-CHO} + 2[\\text{Ag(NH}_3\\text{)}_2]^+ + 3\\text{OH}^- \\rightarrow \\text{R-COO}^- + 2\\text{Ag} \\downarrow + 4\\text{NH}_3 + 2\\text{H}_2\\text{O} $', desc: '利用多侖試劑(含銀氨錯離子)檢驗醛基的存在。醛被氧化為羧酸根，銀離子被還原為金屬銀附著於試管壁。' }, { id: 'r4', name: '4. 斐林反應 (Fehling\'s Test)', cat: '有機化學', syllabus: 'CJb-Vc-5', eq: '$ \\text{R-CHO} + 2\\text{Cu}^{2+} + 5\\text{OH}^- \\rightarrow \\text{R-COO}^- + \\text{Cu}_2\\text{O} \\downarrow (紅) + 3\\text{H}_2\\text{O} $', desc: '利用斐林試劑檢驗還原醣或脂肪族醛，產生紅色氧化亞銅沉澱。' }, { id: 'r5', name: '5. 烯類的加成 (溴水褪色)', cat: '有機化學', syllabus: 'CJb-Vc-2', eq: '$ \\text{CH}_2\\text{=CH}_2 + \\text{Br}_2 \\rightarrow \\text{CH}_2\\text{Br-CH}_2\\text{Br} $', desc: '不飽和烴(含雙鍵或三鍵)與溴水發生加成反應，使紅棕色的溴水褪色。' }, { id: 'r6', name: '6. 苯的硝化反應', cat: '有機化學', syllabus: 'CJb-Vc-3', eq: '$ \\text{C}_6\\text{H}_6 + \\text{HNO}_3 \\xrightarrow{\\text{H}_2\\text{SO}_4} \\text{C}_6\\text{H}_5\\text{NO}_2 + \\text{H}_2\\text{O} $', desc: '芳香烴的親電取代反應，濃硫酸作為催化劑與脫水劑。' }, { id: 'r7', name: '7. 哈柏法製氨 (Haber Process)', cat: '化學平衡', syllabus: 'CJb-Va-6', eq: '$ \\text{N}_2(g) + 3\\text{H}_2(g) \\rightleftharpoons 2\\text{NH}_3(g) + \\text{熱量} $', desc: '高溫高壓下以鐵粉為催化劑製備氨氣。利用勒沙特列原理，低溫高壓有利於產物生成。' }, { id: 'r8', name: '8. 奧士華法製硝酸', cat: '工業化學', syllabus: 'CJb-Vb-3', eq: '$ 4\\text{NH}_3 + 5\\text{O}_2 \\xrightarrow{\\text{Pt}} 4\\text{NO} + 6\\text{H}_2\\text{O} $', desc: '工業上利用氨氣的催化氧化來製備硝酸的三步驟之首。' }, { id: 'r9', name: '9. 接觸法製硫酸', cat: '工業化學', syllabus: 'CJb-Va-6', eq: '$ 2\\text{SO}_2 + \\text{O}_2 \\xrightleftharpoons{\\text{V}_2\\text{O}_5} 2\\text{SO}_3 $', desc: '工業製硫酸的核心步驟，二氧化硫在五氧化二釩催化下氧化為三氧化硫。' }, { id: 'r10', name: '10. 索耳未法製純鹼', cat: '無機化學', syllabus: 'CJb-Va-2', eq: '$ \\text{NaCl} + \\text{NH}_3 + \\text{CO}_2 + \\text{H}_2\\text{O} \\rightarrow \\text{NaHCO}_3 \\downarrow + \\text{NH}_4\\text{Cl} $', desc: '利用碳酸氫鈉溶解度較小而在氨鹼性鹽水中沉澱的特性來製備小蘇打與純鹼。' }, { id: 'r11', name: '11. 碳酸鈣受熱分解', cat: '化學計量', syllabus: 'CJb-Va-2', eq: '$ \\text{CaCO}_3(s) \\xrightarrow{\\Delta} \\text{CaO}(s) + \\text{CO}_2(g) $', desc: '工業上製備生石灰(氧化鈣)的方法。' }, { id: 'r12', name: '12. 銅與濃硝酸反應', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ \\text{Cu} + 4\\text{HNO}_3\\text{(濃)} \\rightarrow \\text{Cu(NO}_3\\text{)}_2 + 2\\text{NO}_2(g) + 2\\text{H}_2\\text{O} $', desc: '產生紅棕色的二氧化氮有毒氣體。' }, { id: 'r13', name: '13. 銅與稀硝酸反應', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ 3\\text{Cu} + 8\\text{HNO}_3\\text{(稀)} \\rightarrow 3\\text{Cu(NO}_3\\text{)}_2 + 2\\text{NO}(g) + 4\\text{H}_2\\text{O} $', desc: '產生無色的一氧化氮氣體，接觸空氣後會迅速氧化為紅棕色的二氧化氮。' }, { id: 'r14', name: '14. 鉛蓄電池放電', cat: '電化學', syllabus: 'CJb-Vb-5', eq: '$ \\text{Pb} + \\text{PbO}_2 + 2\\text{H}_2\\text{SO}_4 \\rightarrow 2\\text{PbSO}_4 + 2\\text{H}_2\\text{O} $', desc: '放電時，陽極與陰極皆轉化為硫酸鉛，且消耗硫酸導致電解液密度下降。' }, { id: 'r15', name: '15. 過錳酸鉀還原 (酸性)', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ \\text{MnO}_4^- + 8\\text{H}^+ + 5\\text{e}^- \\rightarrow \\text{Mn}^{2+} + 4\\text{H}_2\\text{O} $', desc: '強氧化劑，溶液由紫紅色變為無色(或淡粉紅色)。' }, { id: 'r16', name: '16. 二鉻酸鉀還原 (酸性)', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ \\text{Cr}_2\\text{O}_7^{2-} + 14\\text{H}^+ + 6\\text{e}^- \\rightarrow 2\\text{Cr}^{3+} + 7\\text{H}_2\\text{O} $', desc: '常作為酒測器的原理，溶液由橘紅色變為綠色。' }, { id: 'r17', name: '17. 碘滴定 (與硫代硫酸鈉)', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ \\text{I}_2 + 2\\text{S}_2\\text{O}_3^{2-} \\rightarrow 2\\text{I}^- + \\text{S}_4\\text{O}_6^{2-} $', desc: '分析化學中常搭配澱粉指示劑進行的精確滴定。' }, { id: 'r18', name: '18. 二氧化碳檢驗 (石灰水)', cat: '酸鹼/沉澱', syllabus: 'CJb-Va-2', eq: '$ \\text{Ca(OH)}_2 + \\text{CO}_2 \\rightarrow \\text{CaCO}_3 \\downarrow + \\text{H}_2\\text{O} $', desc: '二氧化碳通入澄清石灰水產生白色碳酸鈣沉澱而變混濁。' }, { id: 'r19', name: '19. 鹵素離子檢驗', cat: '沉澱反應', syllabus: 'CJb-Va-3', eq: '$ \\text{Ag}^+ + \\text{Cl}^- \\rightarrow \\text{AgCl} \\downarrow $', desc: '加入硝酸銀水溶液，產生白色(AgCl)、淡黃色(AgBr)或黃色(AgI)沉澱。' }, { id: 'r20', name: '20. 鉻酸根酸鹼平衡', cat: '化學平衡', syllabus: 'CJb-Va-6', eq: '$ 2\\text{CrO}_4^{2-} (黃) + 2\\text{H}^+ \\rightleftharpoons \\text{Cr}_2\\text{O}_7^{2-} (橘紅) + \\text{H}_2\\text{O} $', desc: '勒沙特列原理經典範例。加酸平衡向右(橘紅)，加鹼平衡向左(黃)。' }, { id: 'r21', name: '21. 雙氧水製氧', cat: '化學動力學', syllabus: 'CJb-Va-5', eq: '$ 2\\text{H}_2\\text{O}_2 \\xrightarrow{\\text{MnO}_2} 2\\text{H}_2\\text{O} + \\text{O}_2 $', desc: '以二氧化錳作為催化劑加速過氧化氫的自身氧化還原分解。' }, { id: 'r22', name: '22. 高爐煉鐵 (還原步驟)', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ \\text{Fe}_2\\text{O}_3 + 3\\text{CO} \\xrightarrow{\\Delta} 2\\text{Fe} + 3\\text{CO}_2 $', desc: '工業上以一氧化碳作為還原劑，將鐵礦砂還原為生鐵。' }, { id: 'r23', name: '23. 電解水', cat: '電化學', syllabus: 'CJb-Vb-5', eq: '$ 2\\text{H}_2\\text{O} \\xrightarrow{\\text{電解}} 2\\text{H}_2(g) + \\text{O}_2(g) $', desc: '加入少量強電解質導電，陰極產生氫氣，陽極產生氧氣，體積比 2:1。' }, { id: 'r24', name: '24. 光合作用', cat: '生化/熱力學', syllabus: 'CJb-Vb-6', eq: '$ 6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{光能}} \\text{C}_6\\text{H}_{12}\\text{O}_6 + 6\\text{O}_2 $', desc: '植物利用光能將無機物轉化為葡萄糖並釋放氧氣的吸熱反應。' } ];
     const ptDataExtra = { 1:{r:53,ie:1312},2:{r:31,ie:2372},3:{r:167,ie:520},4:{r:112,ie:899},5:{r:87,ie:801}, 6:{r:67,ie:1086},7:{r:56,ie:1402},8:{r:48,ie:1314},9:{r:42,ie:1681},10:{r:38,ie:2080}, 11:{r:190,ie:496},12:{r:145,ie:738},13:{r:118,ie:578},14:{r:111,ie:786},15:{r:98,ie:1012}, 16:{r:88,ie:1000},17:{r:79,ie:1251},18:{r:71,ie:1520},19:{r:243,ie:419},20:{r:194,ie:590}, 21:{r:184,ie:633},22:{r:176,ie:658},23:{r:171,ie:650},24:{r:166,ie:653},25:{r:161,ie:717}, 26:{r:156,ie:762},27:{r:152,ie:760},28:{r:149,ie:737},29:{r:145,ie:745},30:{r:142,ie:906}, 31:{r:136,ie:579},32:{r:125,ie:762},33:{r:114,ie:947},34:{r:103,ie:941},35:{r:94,ie:1140}, 36:{r:88,ie:1351},37:{r:265,ie:403},38:{r:219,ie:550},39:{r:212,ie:600},40:{r:206,ie:640}, 41:{r:198,ie:652},42:{r:190,ie:684},43:{r:183,ie:702},44:{r:178,ie:710},45:{r:173,ie:720}, 46:{r:169,ie:804},47:{r:165,ie:731},48:{r:161,ie:868},49:{r:156,ie:558},50:{r:145,ie:709}, 51:{r:133,ie:834},52:{r:123,ie:869},53:{r:115,ie:1008},54:{r:108,ie:1170},55:{r:298,ie:376}, 56:{r:253,ie:503},72:{r:208,ie:658},73:{r:200,ie:761},74:{r:193,ie:770},75:{r:188,ie:760}, 76:{r:185,ie:840},77:{r:180,ie:880},78:{r:177,ie:870},79:{r:174,ie:890},80:{r:171,ie:1007}, 81:{r:156,ie:589},82:{r:154,ie:715},83:{r:143,ie:703},84:{r:135,ie:812},85:{r:127,ie:890}, 86:{r:120,ie:1037} };
     const fullPT = [{z:1,s:'H',n:'氫',en:2.2,g:1,p:1},{z:2,s:'He',n:'氦',en:null,g:18,p:1},{z:3,s:'Li',n:'鋰',en:0.98,g:1,p:2},{z:4,s:'Be',n:'鈹',en:1.57,g:2,p:2},{z:5,s:'B',n:'硼',en:2.04,g:13,p:2},{z:6,s:'C',n:'碳',en:2.55,g:14,p:2},{z:7,s:'N',n:'氮',en:3.04,g:15,p:2},{z:8,s:'O',n:'氧',en:3.44,g:16,p:2},{z:9,s:'F',n:'氟',en:3.98,g:17,p:2},{z:10,s:'Ne',n:'氖',en:null,g:18,p:2},{z:11,s:'Na',n:'鈉',en:0.93,g:1,p:3},{z:12,s:'Mg',n:'鎂',en:1.31,g:2,p:3},{z:13,s:'Al',n:'鋁',en:1.61,g:13,p:3},{z:14,s:'Si',n:'矽',en:1.9,g:14,p:3},{z:15,s:'P',n:'磷',en:2.19,g:15,p:3},{z:16,s:'S',n:'硫',en:2.58,g:16,p:3},{z:17,s:'Cl',n:'氯',en:3.16,g:17,p:3},{z:18,s:'Ar',n:'氬',en:null,g:18,p:3},{z:19,s:'K',n:'鉀',en:0.82,g:1,p:4},{z:20,s:'Ca',n:'鈣',en:1.0,g:2,p:4},{z:21,s:'Sc',n:'鈧',en:1.36,g:3,p:4},{z:22,s:'Ti',n:'鈦',en:1.54,g:4,p:4},{z:23,s:'V',n:'釩',en:1.63,g:5,p:4},{z:24,s:'Cr',n:'鉻',en:1.66,g:6,p:4},{z:25,s:'Mn',n:'錳',en:1.55,g:7,p:4},{z:26,s:'Fe',n:'鐵',en:1.83,g:8,p:4},{z:27,s:'Co',n:'鈷',en:1.88,g:9,p:4},{z:28,s:'Ni',n:'鎳',en:1.91,g:10,p:4},{z:29,s:'Cu',n:'銅',en:1.9,g:11,p:4},{z:30,s:'Zn',n:'鋅',en:1.65,g:12,p:4},{z:31,s:'Ga',n:'鎵',en:1.81,g:13,p:4},{z:32,s:'Ge',n:'鍺',en:2.01,g:14,p:4},{z:33,s:'As',n:'砷',en:2.18,g:15,p:4},{z:34,s:'Se',n:'硒',en:2.55,g:16,p:4},{z:35,s:'Br',n:'溴',en:2.96,g:17,p:4},{z:36,s:'Kr',n:'氪',en:3.0,g:18,p:4},{z:37,s:'Rb',n:'銣',en:0.82,g:1,p:5},{z:38,s:'Sr',n:'鍶',en:0.95,g:2,p:5},{z:39,s:'Y',n:'釔',en:1.22,g:3,p:5},{z:40,s:'Zr',n:'鋯',en:1.33,g:4,p:5},{z:41,s:'Nb',n:'鈮',en:1.6,g:5,p:5},{z:42,s:'Mo',n:'鉬',en:2.16,g:6,p:5},{z:43,s:'Tc',n:'鎝',en:1.9,g:7,p:5},{z:44,s:'Ru',n:'釕',en:2.2,g:8,p:5},{z:45,s:'Rh',n:'銠',en:2.28,g:9,p:5},{z:46,s:'Pd',n:'鈀',en:2.2,g:10,p:5},{z:47,s:'Ag',n:'銀',en:1.93,g:11,p:5},{z:48,s:'Cd',n:'鎘',en:1.69,g:12,p:5},{z:49,s:'In',n:'銦',en:1.78,g:13,p:5},{z:50,s:'Sn',n:'錫',en:1.96,g:14,p:5},{z:51,s:'Sb',n:'銻',en:2.05,g:15,p:5},{z:52,s:'Te',n:'碲',en:2.1,g:16,p:5},{z:53,s:'I',n:'碘',en:2.66,g:17,p:5},{z:54,s:'Xe',n:'氙',en:2.6,g:18,p:5},{z:55,s:'Cs',n:'銫',en:0.79,g:1,p:6},{z:56,s:'Ba',n:'鋇',en:0.89,g:2,p:6},{z:72,s:'Hf',n:'鉿',en:1.3,g:4,p:6},{z:73,s:'Ta',n:'鉭',en:1.5,g:5,p:6},{z:74,s:'W',n:'鎢',en:2.36,g:6,p:6},{z:75,s:'Re',n:'錸',en:1.9,g:7,p:6},{z:76,s:'Os',n:'鋨',en:2.2,g:8,p:6},{z:77,s:'Ir',n:'銥',en:2.2,g:9,p:6},{z:78,s:'Pt',n:'鉑',en:2.28,g:10,p:6},{z:79,s:'Au',n:'金',en:2.54,g:11,p:6},{z:80,s:'Hg',n:'汞',en:2.0,g:12,p:6},{z:81,s:'Tl',n:'鉈',en:1.62,g:13,p:6},{z:82,s:'Pb',n:'鉛',en:2.33,g:14,p:6},{z:83,s:'Bi',n:'鉍',en:2.02,g:15,p:6},{z:84,s:'Po',n:'釙',en:2.0,g:16,p:6},{z:85,s:'At',n:'砈',en:2.2,g:17,p:6},{z:86,s:'Rn',n:'氡',en:null,g:18,p:6},{z:87,s:'Fr',n:'鍅',en:0.7,g:1,p:7},{z:88,s:'Ra',n:'鐳',en:0.9,g:2,p:7},{z:104,s:'Rf',n:'鑪',en:null,g:4,p:7},{z:105,s:'Db',n:'𨧀',en:null,g:5,p:7},{z:106,s:'Sg',n:'𨭎',en:null,g:6,p:7},{z:107,s:'Bh',n:'𨨏',en:null,g:7,p:7},{z:108,s:'Hs',n:'𨭆',en:null,g:8,p:7},{z:109,s:'Mt',n:'䥑',en:null,g:9,p:7},{z:110,s:'Ds',n:'鐽',en:null,g:10,p:7},{z:111,s:'Rg',n:'錀',en:null,g:11,p:7},{z:112,s:'Cn',n:'鎶',en:null,g:12,p:7},{z:113,s:'Nh',n:'鉨',en:null,g:13,p:7},{z:114,s:'Fl',n:'鈇',en:null,g:14,p:7},{z:115,s:'Mc',n:'鏌',en:null,g:15,p:7},{z:116,s:'Lv',n:'鉝',en:null,g:16,p:7},{z:117,s:'Ts',n:'鿬',en:null,g:17,p:7},{z:118,s:'Og',n:'鿫',en:null,g:18,p:7}];
 
-    const ghsMap = {
-        '水': [], '二氧化碳': ['bottle'], '氯化鈉': [], '鹽酸': ['acid', 'exclam'], '氫氧化鈉': ['acid'],
-        '硫酸': ['acid'], '硝酸': ['acid', 'rondflam'], '氨氣': ['bottle', 'skull', 'acid', 'pollu'],
-        '甲烷': ['flamme', 'bottle'], '乙醇': ['flamme', 'exclam'], '乙酸': ['flamme', 'acid'],
-        '苯': ['flamme', 'silhouete', 'exclam'], '阿斯匹靈': ['exclam'], '葡萄糖': [],
-        '尿素': [], '氧氣': ['rondflam', 'bottle'], '氮氣': ['bottle'], '氫氣': ['flamme', 'bottle'],
-        '碳酸鈣': [], '碳酸氫鈉': [], '氯化鉀': [], '硫酸銅': ['exclam', 'pollu'],
-        '高錳酸鉀': ['rondflam', 'exclam', 'pollu'], '甲醇': ['flamme', 'skull', 'silhouete'],
-        '丙酮': ['flamme', 'exclam'], '乙酸乙酯': ['flamme', 'exclam'],
-        '甲醛': ['skull', 'silhouete', 'exclam'], '苯酚': ['skull', 'silhouete', 'acid'],
-        '維生素C': [], '咖啡因': ['exclam'], '三聚氰胺': ['exclam']
+    // ====== P3: 終極防護版 GHS 動態 API ======
+    const pubchemGhsNames = {
+        'GHS01': '爆炸物', 'GHS02': '易燃', 'GHS03': '氧化劑', 'GHS04': '高壓氣體',
+        'GHS05': '腐蝕性', 'GHS06': '急毒性', 'GHS07': '刺激性/危害', 'GHS08': '健康危害', 'GHS09': '環境危害'
     };
-    const ghsIcons = {
-        'explos': 'https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS01.svg',
-        'flamme': 'https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS02.svg',
-        'rondflam': 'https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS03.svg',
-        'bottle': 'https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS04.svg',
-        'acid': 'https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS05.svg',
-        'skull': 'https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS06.svg',
-        'exclam': 'https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS07.svg',
-        'silhouete': 'https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS08.svg',
-        'pollu': 'https://pubchem.ncbi.nlm.nih.gov/images/ghs/GHS09.svg'
-    };
-    const ghsNames = {
-        'explos': '爆炸物', 'flamme': '易燃', 'rondflam': '氧化劑', 'bottle': '高壓氣體',
-        'acid': '腐蝕性', 'skull': '急毒性', 'exclam': '刺激性', 'silhouete': '健康危害', 'pollu': '環境危害'
-    };
+
+    async function fetchGHSFromPubChem(cid) {
+        try {
+            let res = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/${cid}/JSON?heading=GHS+Classification`);
+            if (!res.ok) {
+                res = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/${cid}/JSON?heading=Safety+and+Hazards`);
+            }
+            if (!res.ok) return [];
+            
+            const textData = await res.text();
+            const matches = textData.match(/GHS0[1-9]/g);
+            
+            if (matches) {
+                return Array.from(new Set(matches)).sort();
+            }
+            return [];
+        } catch (e) {
+            console.error("GHS Fetch Error:", e);
+            return [];
+        }
+    }
 
     // ==========================================
     // 核心初始化 (加入 Try-Catch 防止連鎖崩潰)
@@ -689,19 +690,19 @@
             const nav = document.querySelector(`.nav-item[onclick*="${id}"]`);
             if(nav) { 
                 nav.classList.add('active'); 
-                // V4.27 修復：只抓取主文字，避免抓到標籤如「防護」字樣
+                // V4.30 修復：只抓取主文字，避免抓到標籤如「防護」字樣
                 let cleanTitle = nav.childNodes[0].nodeValue ? nav.childNodes[0].nodeValue.trim() : nav.innerText;
-                document.getElementById('mobileTitle').innerText = cleanTitle; 
-                document.getElementById('pageTitleText').innerText = cleanTitle; 
+                const mTitle = document.getElementById('mobileTitle');
+                if (mTitle) mTitle.innerText = cleanTitle; 
+                const pTitle = document.getElementById('pageTitleText');
+                if (pTitle) pTitle.innerText = cleanTitle; 
             }
             if(window.innerWidth <= 768) toggleSidebar(false);
             if(id === 'view-draw' && window.jsmeApplet) window.dispatchEvent(new Event('resize'));
             if(id === 'view-lab') updateTitrationSim();
-            if(id === 'view-vault') loadVault(); // V4.27：確保進入題庫時更新容量條
+            if(id === 'view-vault') loadVault(); 
             if(window.MathJax && target) MathJax.typesetPromise([target]).catch(e=>{});
-        } catch(err) {
-            console.error(err);
-        }
+        } catch(err) { console.error("switchView error:", err); }
     }
 
     function toggleSidebar(f) { const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay'); if(f===false||s.classList.contains('open')){s.classList.remove('open');o.classList.remove('open');}else{s.classList.add('open');o.classList.add('open');} }
@@ -762,14 +763,6 @@
     }
     
     // ====== 電化學與勒沙特列模擬器邏輯 ======
-    const stdPotentials = { 'Zn': -0.76, 'Cu': 0.34, 'Ag': 0.80 };
-    const electroColors = { 'Zn': '#7f8c8d', 'Cu': '#e67e22', 'Ag': '#ecf0f1' };
-    const electroEqs = {
-        'Zn': { ox: 'Zn → Zn²⁺ + 2e⁻', red: 'Zn²⁺ + 2e⁻ → Zn' },
-        'Cu': { ox: 'Cu → Cu²⁺ + 2e⁻', red: 'Cu²⁺ + 2e⁻ → Cu' },
-        'Ag': { ox: 'Ag → Ag⁺ + e⁻', red: 'Ag⁺ + e⁻ → Ag' }
-    };
-
     function updateElectroSim() {
         const left = document.getElementById('electroLeft').value;
         const right = document.getElementById('electroRight').value;
@@ -869,7 +862,6 @@
         if (btnElement) btnElement.innerText = newState ? "👁️ 還原算式" : "📝 轉換學習單";
     }
 
-    // ====== V4.27: 題庫防爆寫入與打標 ======
     function saveToVaultContext(elementId, baseTitle) {
         const src = document.getElementById(elementId); if(!src || !src.hasAttribute('data-raw-text')) return showToast("無內容！");
         const raw = src.getAttribute('data-raw-text'), isC = src.getAttribute('data-cloze-mode') === 'true';
@@ -988,7 +980,6 @@
     }
     function addFavorite(n, c) { if(n&&c&&!favoritesList.find(x=>x.cid===c)) { favoritesList.push({name:n,cid:c}); localStorage.setItem('chem_favorites',JSON.stringify(favoritesList)); renderFavorites(); showToast("已收藏"); } }
 
-    // JSME & PubChem 
     async function smartGetCid(name) {
         if(/[\u4e00-\u9fa5]/.test(name)) {
             const en = await fetch(WIKI_API+encodeURIComponent(name)).then(r=>r.json()).then(d=>{const k=Object.keys(d.query.pages)[0]; return k!=="-1"&&d.query.pages[k].langlinks?d.query.pages[k].langlinks[0]['*']:null}).catch(()=>null);
@@ -997,6 +988,7 @@
         const cid = await fetch(`${PUBCHEM_API}/compound/name/${encodeURIComponent(name)}/cids/JSON`).then(r=>r.ok?r.json():null).then(d=>d?d.IdentifierList.CID[0]:null).catch(()=>null);
         return cid ? {cid, finalName:name} : null;
     }
+    
     async function searchSingle(isC = false) {
         const n = document.getElementById('chemName').value.trim(), s = document.getElementById('singleStatus'); if(!n) return;
         if(isC && !currentCidA) isC = false; s.innerHTML='🔄 解析中...'; s.style.color='var(--text-main)';
@@ -1005,34 +997,43 @@
         if(isC) { currentCidB=c; currentNameB=r.finalName; document.getElementById('dashboardAreaCompare').style.display='block'; document.getElementById('titleB').innerText=`${n} (對照)`; } 
         else { currentCidA=c; currentNameA=r.finalName; document.getElementById('dashboardAreaWrapper').style.display='grid'; document.getElementById('dashboardAreaCompare').style.display='none'; document.getElementById('titleA').innerText=n; }
         document.getElementById(`chemImage${suf}`).src=`${PUBCHEM_API}/compound/cid/${c}/PNG?record_type=2d&image_size=large`; s.innerHTML='✅ 完成'; s.style.color='var(--success)';
+        
+        // 渲染等待狀態
+        document.getElementById(`ghsContainer${suf}`).innerHTML = `<div class="ghs-container"><span style="color:var(--text-muted); font-size:13px;">🔄 正在向 PubChem 檢索 GHS 危害資訊...</span></div>`;
+
         Promise.all([
             load3DAsync(c, `viewer_3D_${suf}`, `viewer3D_single_${suf}`),
-            fetch(`${PUBCHEM_API}/compound/cid/${c}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,IUPACName,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,Complexity/JSON`).then(x=>x.json()).then(d=>{
-                if(!d.PropertyTable) return; const p=d.PropertyTable.Properties[0];
-                document.getElementById(`td_iupac${suf}`).innerText=p.IUPACName||"無"; document.getElementById(`td_formula${suf}`).innerText=p.MolecularFormula||"無"; document.getElementById(`td_weight${suf}`).innerText=p.MolecularWeight?p.MolecularWeight+" g/mol":"無";
-                if(isC) currentSmilesB=p.CanonicalSMILES||""; else currentSmilesA=p.CanonicalSMILES||"";
-                
-                const chemNameQuery = isC ? currentNameB : currentNameA;
-                const ghsList = ghsMap[chemNameQuery] || ghsMap[n] || [];
-                let ghsHtml = '<h4 style="margin: 0 0 10px 0; color: var(--danger);">⚠️ GHS 危害標示</h4><div style="display:flex; flex-wrap:wrap; gap:8px;">';
-                if (ghsList.length > 0) {
-                    ghsList.forEach(code => {
-                        ghsHtml += `<div class="ghs-badge"><img src="${ghsIcons[code]}" class="ghs-icon" alt="${ghsNames[code]}"><span>${ghsNames[code]}</span></div>`;
-                    });
-                } else {
-                    ghsHtml += `<span style="color:var(--text-muted); font-size:13px;">無此物質的 GHS 標示紀錄 (或為一般物質)</span>`;
-                }
-                ghsHtml += '</div>';
-                document.getElementById(`ghsContainer${suf}`).innerHTML = `<div class="ghs-container">${ghsHtml}</div>`;
+            fetch(`${PUBCHEM_API}/compound/cid/${c}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,IUPACName,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,Complexity/JSON`).then(x=>x.json()),
+            fetchGHSFromPubChem(c)
+        ]).then(results => {
+            const d = results[1];
+            const ghsCodes = results[2];
 
-                if(window.Recharts) {
-                    const { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } = window.Recharts;
-                    const data = [{s:'質量',A:Math.min(100,(p.MolecularWeight/500)*100)||0,r:p.MolecularWeight},{s:'H給',A:Math.min(100,(p.HBondDonorCount/10)*100)||0,r:p.HBondDonorCount},{s:'H受',A:Math.min(100,(p.HBondAcceptorCount/10)*100)||0,r:p.HBondAcceptorCount},{s:'旋轉鍵',A:Math.min(100,(p.RotatableBondCount/10)*100)||0,r:p.RotatableBondCount},{s:'複雜度',A:Math.min(100,(p.Complexity/500)*100)||0,r:p.Complexity}];
-                    const col=suf==='A'?"#3498db":"#d81b60"; const TT=({active,payload})=>{if(active&&payload&&payload.length) return React.createElement('div',{style:{background:'#fff',padding:'5px',border:'1px solid #ccc'}},React.createElement('p',null,`${payload[0].payload.s}: ${payload[0].payload.r||0}`));return null;};
-                    ReactDOM.render(React.createElement(ResponsiveContainer,{width:"100%",height:"100%"},React.createElement(RadarChart,{cx:"50%",cy:"50%",outerRadius:"70%",data},React.createElement(PolarGrid),React.createElement(PolarAngleAxis,{dataKey:"s",tick:{fontSize:11}}),React.createElement(PolarRadiusAxis,{angle:30,domain:[0,100],tick:false,axisLine:false}),React.createElement(Radar,{dataKey:"A",stroke:col,fill:col,fillOpacity:0.5}),React.createElement(Tooltip,{content:React.createElement(TT)}))), document.getElementById(`radarChart${suf}`));
-                }
-            })
-        ]).catch(e=>{});
+            if(!d.PropertyTable) return; const p=d.PropertyTable.Properties[0];
+            document.getElementById(`td_iupac${suf}`).innerText=p.IUPACName||"無"; document.getElementById(`td_formula${suf}`).innerText=p.MolecularFormula||"無"; document.getElementById(`td_weight${suf}`).innerText=p.MolecularWeight?p.MolecularWeight+" g/mol":"無";
+            if(isC) currentSmilesB=p.CanonicalSMILES||""; else currentSmilesA=p.CanonicalSMILES||"";
+            
+            // 動態渲染 GHS
+            let ghsHtml = '<h4 style="margin: 0 0 10px 0; color: var(--danger); width:100%;">⚠️ GHS 危害標示 (PubChem 即時連線)</h4><div style="display:flex; flex-wrap:wrap; gap:8px;">';
+            if (ghsCodes.length > 0) {
+                ghsCodes.forEach(code => {
+                    const name = pubchemGhsNames[code] || code;
+                    const iconUrl = `https://pubchem.ncbi.nlm.nih.gov/images/ghs/${code}.svg`;
+                    ghsHtml += `<div class="ghs-badge"><img src="${iconUrl}" class="ghs-icon" alt="${name}"><span>${name}</span></div>`;
+                });
+            } else {
+                ghsHtml += `<span style="color:var(--text-muted); font-size:13px;">PubChem 暫無收錄該物質之 GHS 資訊 (或屬無危害物質)</span>`;
+            }
+            ghsHtml += '</div>';
+            document.getElementById(`ghsContainer${suf}`).innerHTML = `<div class="ghs-container">${ghsHtml}</div>`;
+
+            if(window.Recharts) {
+                const { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } = window.Recharts;
+                const data = [{s:'質量',A:Math.min(100,(p.MolecularWeight/500)*100)||0,r:p.MolecularWeight},{s:'H給',A:Math.min(100,(p.HBondDonorCount/10)*100)||0,r:p.HBondDonorCount},{s:'H受',A:Math.min(100,(p.HBondAcceptorCount/10)*100)||0,r:p.HBondAcceptorCount},{s:'旋轉鍵',A:Math.min(100,(p.RotatableBondCount/10)*100)||0,r:p.RotatableBondCount},{s:'複雜度',A:Math.min(100,(p.Complexity/500)*100)||0,r:p.Complexity}];
+                const col=suf==='A'?"#3498db":"#d81b60"; const TT=({active,payload})=>{if(active&&payload&&payload.length) return React.createElement('div',{style:{background:'#fff',padding:'5px',border:'1px solid #ccc'}},React.createElement('p',null,`${payload[0].payload.s}: ${payload[0].payload.r||0}`));return null;};
+                ReactDOM.render(React.createElement(ResponsiveContainer,{width:"100%",height:"100%"},React.createElement(RadarChart,{cx:"50%",cy:"50%",outerRadius:"70%",data},React.createElement(PolarGrid),React.createElement(PolarAngleAxis,{dataKey:"s",tick:{fontSize:11}}),React.createElement(PolarRadiusAxis,{angle:30,domain:[0,100],tick:false,axisLine:false}),React.createElement(Radar,{dataKey:"A",stroke:col,fill:col,fillOpacity:0.5}),React.createElement(Tooltip,{content:React.createElement(TT)}))), document.getElementById(`radarChart${suf}`));
+            }
+        }).catch(e=>{});
     }
     function clearSingle() { document.getElementById('chemName').value=""; document.getElementById('singleStatus').innerHTML=""; document.getElementById('dashboardAreaWrapper').style.display="none"; currentCidA=currentCidB=null; }
     async function load3DAsync(cid, elId, ref) { const div=document.getElementById(elId); if(!window[ref]) window[ref]=$3Dmol.createViewer(div,{backgroundColor:'transparent'}); const v=window[ref]; v.clear(); const res=await fetch(`${PUBCHEM_API}/compound/cid/${cid}/record/SDF/?record_type=3d`); if(res.ok){v.addModel(await res.text(),"sdf"); v.setStyle({},{stick:{radius:0.15},sphere:{scale:0.3}}); v.zoomTo(); v.render(); setTimeout(()=>{v.resize();v.zoomTo();v.render();},150);} }
@@ -1047,6 +1048,7 @@
     async function handleAIVisionUpload(e) { const f=e.target.files[0]; if(!f) return; e.target.value=''; const k=localStorage.getItem('gemini_api_key'); if(!k)return openApiModal(); document.getElementById('syncStatus').innerText="✨ 辨識中..."; try{const b=await new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.readAsDataURL(f);});const m=await getBestModel(k);const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${k}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:"辨識圖中SMILES，失敗回ERROR"},{inline_data:{mime_type:f.type,data:b.split(',')[1]}}]}]})});if(!res.ok)throw new Error();const t=(await res.json()).candidates[0].content.parts[0].text.trim().replace(/```/g,'');if(t==="ERROR"||!t)throw new Error();document.getElementById('externalSmiles').value=t;jsmeApplet.readGenericMolecularInput(t);}catch(err){showToast("辨識失敗");} }
 
     // 實驗室 & 公式計算
+    function updateTitrationSim() { const vA=parseFloat(document.getElementById('titrationSlider').value), ind=document.getElementById('indicatorSelect').value, vB=25, cB=0.1, cA=0.1, mO=vB*cB, mH=vA*cA, tv=vB+vA; let ph=mH<mO?14+Math.log10((mO-mH)/tv):(mH===mO?7:-Math.log10((mH-mO)/tv)); ph=Math.max(1,Math.min(14,ph)); document.getElementById('titrationPHVal').innerText=ph.toFixed(2); document.getElementById('titrationVolVal').innerText=vA.toFixed(1); const lq=document.getElementById('flaskLiquidSim'); lq.style.height=`${40+(vA/50)*50}%`; if(ind==='phenolphthalein') lq.style.backgroundColor=ph>=10?'rgba(255,20,147,0.7)':(ph>8.2?`rgba(255,20,147,${0.1+((ph-8.2)/1.8)*0.6})`:'rgba(255,255,255,0.2)'); else lq.style.backgroundColor=ph<=4.4?'rgba(231,76,60,0.7)':(ph>=6.2?'rgba(241,196,15,0.7)':`rgba(${231+(ph-4.4)/1.8*10},${76+(ph-4.4)/1.8*120},${60-(ph-4.4)/1.8*45},0.7)`); titrationData=[]; for(let v=0;v<=50;v+=0.5){let p, hh=v*cA;if(hh<mO) p=14+Math.log10((mO-hh)/(vB+v));else if(hh===mO) p=7;else p=-Math.log10((hh-mO)/(vB+v)); titrationData.push({vol:v,pH:Math.max(1,Math.min(14,p))});} if(window.Recharts){const {LineChart,Line,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer,ReferenceDot}=window.Recharts;const C=()=>React.createElement(ResponsiveContainer,{width:"100%",height:"100%"},React.createElement(LineChart,{data:titrationData,margin:{top:10,right:10,left:-20,bottom:0}},React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"var(--border-color)"}),React.createElement(XAxis,{dataKey:"vol",type:"number",domain:[0,50],tick:{fill:'var(--text-muted)'}}),React.createElement(YAxis,{domain:[0,14],tick:{fill:'var(--text-muted)'}}),React.createElement(Tooltip,{contentStyle:{backgroundColor:'var(--bg-panel)',color:'var(--text-main)'}}),React.createElement(Line,{type:"monotone",dataKey:"pH",stroke:"var(--rose)",strokeWidth:3,dot:false}),React.createElement(ReferenceDot,{x:vA,y:ph,r:6,fill:"var(--primary)",stroke:"none"})));ReactDOM.render(React.createElement(C),document.getElementById('titrationChartContainer'));} }
     function updateLabBoyle() { const v=parseFloat(document.getElementById('sl_boyle_v').value); document.getElementById('val_boyle_v').innerText=v.toFixed(1); document.getElementById('val_boyle_p').innerText=(10/v).toFixed(2); document.getElementById('gas-piston').style.top=`${100-(v*10)}%`; }
     function updateLabMolarity() { const n=parseFloat(document.getElementById('sl_mol_n').value), v=parseFloat(document.getElementById('sl_mol_v').value), c=n/v; document.getElementById('val_mol_n').innerText=n.toFixed(1); document.getElementById('val_mol_v').innerText=v.toFixed(1); document.getElementById('val_mol_c').innerText=c.toFixed(2); document.getElementById('beaker-liquid').style.height=`${(v/5)*100}%`; document.getElementById('beaker-liquid').style.background=`rgba(52,152,219,${Math.max(0.1,Math.min(1,c/2))})`; }
     function updateLabPH() { const p=parseFloat(document.getElementById('sl_ph_h').value); document.getElementById('val_ph_h').innerText=p.toFixed(1); document.getElementById('val_ph_res').innerText=p.toFixed(2); document.getElementById('ph-paper').style.background=`hsl(${p*20},80%,50%)`; }
@@ -1068,10 +1070,9 @@
         st.innerHTML+=`<br><b>🎉 打包 ${sc} 個圖。</b>`; if(sc>0) zip.generateAsync({type:"blob"}).then(c=>{saveAs(c,"化學圖庫.zip");btn.disabled=false;}); else btn.disabled=false;
     }
 
-    // ====== V4.27 題庫管理 (含容量偵測與過濾) ======
+    // 題庫管理
     let activeVaultTag = null;
     function filterVaultByTag(tag) { activeVaultTag = (activeVaultTag === tag) ? null : tag; loadVault(); }
-    
     function updateVaultCapacity() {
         let lsTotal = 0;
         for (let x in localStorage) { if (localStorage.hasOwnProperty(x)) { lsTotal += ((localStorage[x].length + x.length) * 2); } }
@@ -1080,47 +1081,35 @@
         if (capBar) { capBar.style.width = pct + '%'; capBar.style.background = pct > 90 ? 'var(--danger)' : (pct > 70 ? 'var(--warning)' : 'var(--success)'); }
         if (capText) capText.innerText = `${mb} MB / ~5.00 MB`;
     }
-
     function loadVault() {
         updateVaultCapacity();
         const vList = document.getElementById('vaultList'); if(!vList) return; vList.innerHTML = '';
         const vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        
-        let allTags = new Set();
-        vault.forEach(q => { if(q.tags) q.tags.forEach(t => allTags.add(t)); });
-        
+        let allTags = new Set(); vault.forEach(q => { if(q.tags) q.tags.forEach(t => allTags.add(t)); });
         const tCloud = document.getElementById('vaultTagCloud');
-        if(tCloud) {
-            tCloud.innerHTML = Array.from(allTags).map(t => `<span class="chem-tag ${activeVaultTag === t ? 'selected' : ''}" onclick="filterVaultByTag('${t}')">#${t}</span>`).join('');
-        }
-
+        if(tCloud) { tCloud.innerHTML = Array.from(allTags).map(t => `<span class="chem-tag ${activeVaultTag === t ? 'selected' : ''}" onclick="filterVaultByTag('${t}')">#${t}</span>`).join(''); }
         if(!vault.length) { vList.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">📭 目前題庫是空的。</div>'; return; }
-
         const keyword = (document.getElementById('vaultSearchInput')?.value || '').toLowerCase();
         const filteredVault = vault.filter(q => {
             const matchKeyword = !keyword || q.title.toLowerCase().includes(keyword) || (q.rawText && q.rawText.toLowerCase().includes(keyword)) || (q.content && q.content.toLowerCase().includes(keyword));
             const matchTag = !activeVaultTag || (q.tags && q.tags.includes(activeVaultTag));
             return matchKeyword && matchTag;
         });
-
         if(!filteredVault.length) { vList.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted);">無符合條件的題目。</div>'; return; }
-
         filteredVault.forEach(q => {
             const card = document.createElement('div'); card.className = 'card';
             const displayHtml = processTextForDisplay(q.rawText || q.content, q.isCloze);
             const tagsHtml = q.tags ? q.tags.map(t => `<span style="font-size:11px; background:var(--bg-base); border:1px solid var(--border-color); padding:2px 6px; border-radius:10px; color:var(--text-muted); margin-right:5px;">#${t}</span>`).join('') : '';
-
             card.innerHTML = `<div class="vault-header"><div><b style="color:var(--ai); font-size:16px;">${q.title}</b><div style="margin-top:5px;">${tagsHtml}</div><div style="font-size:12px;color:var(--text-muted); margin-top:5px;">${q.date}</div></div><div><button class="btn-success btn-sm" onclick="printVaultItem('${q.id}')">列印</button> <button class="btn-info btn-sm" onclick="exportQuizWord('${q.id}')">Word</button> <button class="btn-danger btn-sm" onclick="deleteQuiz('${q.id}')">刪除</button></div></div><div style="margin-top:10px; font-size:14px; line-height:1.6; background:var(--bg-base); padding:15px; border-radius:4px; overflow-x:auto;">${displayHtml}</div>`;
             vList.appendChild(card);
         });
         if(window.MathJax) MathJax.typesetPromise([vList]).catch(e=>{});
     }
-
     function printVaultItem(id) { const q = JSON.parse(localStorage.getItem('quiz_vault')||'[]').find(x=>x.id===id); if(!q)return; const w=window.open('','','width=800,height=600'); w.document.write(`<html><head><script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"><\/script><style>body{font-family:sans-serif;padding:30px;} .cloze-blank{color:transparent;border-bottom:1px solid #000;min-width:40px;display:inline-block;} .answer-block{display:none;}</style></head><body><h2>${q.title}</h2><hr>${q.rawText?processTextForDisplay(q.rawText,q.isCloze):q.content}</body></html>`); w.document.close(); setTimeout(()=>{w.print();},1000); }
     function exportQuizWord(id) { const q = JSON.parse(localStorage.getItem('quiz_vault')||'[]').find(x=>x.id===id); if(!q)return; saveAs(new Blob(['\ufeff', `<html xmlns:w='urn:schemas-microsoft-com:office:word'><meta charset='utf-8'><style>body{font-family:sans-serif;} .cloze-blank{color:transparent;border-bottom:1px solid #000;min-width:40px;display:inline-block;}</style><body><h2>${q.title}</h2>${q.rawText?processTextForDisplay(q.rawText,q.isCloze):q.content}</body></html>`], {type:'application/msword'}), `${q.title}.doc`); }
     function deleteQuiz(id) { if(confirm("刪除？")) { localStorage.setItem('quiz_vault', JSON.stringify(JSON.parse(localStorage.getItem('quiz_vault')||'[]').filter(x=>x.id!==id))); loadVault(); showToast("已刪除"); } }
     function clearVault() { if(confirm("清空？")) { localStorage.removeItem('quiz_vault'); loadVault(); showToast("已清空"); } }
-    function exportBackupJSON() { saveAs(new Blob([JSON.stringify({version:"V4.27", quiz_vault:JSON.parse(localStorage.getItem('quiz_vault')||'[]')},null,2)], {type:"application/json"}), "Backup.json"); }
+    function exportBackupJSON() { saveAs(new Blob([JSON.stringify({version:"V4.30", quiz_vault:JSON.parse(localStorage.getItem('quiz_vault')||'[]')},null,2)], {type:"application/json"}), "Backup.json"); }
     function importBackupJSON(e) { const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=x=>{try{const d=JSON.parse(x.target.result); if(d.quiz_vault){localStorage.setItem('quiz_vault',JSON.stringify(d.quiz_vault)); loadVault(); showToast("匯入成功");}}catch(err){alert("失敗");}}; r.readAsText(f); }
     function downloadImage(id, n) { const a=document.createElement('a'); a.download=`${n}.png`; a.href=document.getElementById(id).src; a.click(); }
     function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>showToast("複製！")); }
