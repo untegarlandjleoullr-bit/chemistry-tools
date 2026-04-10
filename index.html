@@ -4,13 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="referrer" content="no-referrer">
-    <title>高中化學講義素材整合工作站_V4.30 (終極黃金版)</title>
+    <title>高中化學講義素材整合工作站_V4.38 (教學視覺化升級版)</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://3dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
-    
-    <script type="text/javascript" src="https://jsme-editor.github.io/dist/jsme/jsme.nocache.js"></script>
     
     <script src="https://unpkg.com/react@17/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js"></script>
@@ -24,6 +22,21 @@
         };
     </script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <script>
+        let jsmeApplet = null;
+        let jsmeReadonlyApplet = null;
+        function jsmeOnLoad() {
+            setTimeout(function() {
+                if (document.getElementById("jsme_container")) {
+                    jsmeApplet = new JSApplet.JSME("jsme_container", "100%", "100%", { options: "newlook,star,nosmiles,nohydrogens" });
+                    jsmeApplet.setCallBack("AfterStructureModified", () => { if(typeof onCanvasModified === 'function') onCanvasModified(); });
+                    jsmeReadonlyApplet = new JSApplet.JSME("jsme_readonly_container", "100%", "100%", { options: "depict,newlook,nosmiles,nohydrogens" });
+                }
+            }, 100);
+        }
+    </script>
+    <script type="text/javascript" src="https://jsme-editor.github.io/dist/jsme/jsme.nocache.js"></script>
 
     <style>
         /* ====== 全域 CSS 變數 ====== */
@@ -97,6 +110,7 @@
 
         /* 畫布與佈局 */
         .toolbar { display: flex; gap: 10px; margin-bottom: 15px; background: var(--bg-panel); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); align-items: center; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(0,0,0,0.02);}
+        .template-library { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; background: rgba(52, 152, 219, 0.05); padding: 10px 15px; border-radius: 8px; border: 1px dashed var(--secondary); margin-bottom: 15px; }
         .canvas-layout { display: grid; grid-template-columns: 2.5fr 1fr; gap: 20px; align-items: stretch; }
         #jsme_container { border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; background: #fff; height: 450px; width: 100%; }
         #jsme_container table, #jsme_readonly_container table { border-collapse: separate !important; table-layout: auto !important; margin: 0 !important; width: auto !important; background: transparent !important; }
@@ -164,7 +178,7 @@
         .electro-electrode { width: 24px; height: 120px; position: absolute; bottom: 10px; left: 38px; border-radius: 4px; transition: background 0.3s;}
         .electro-wire { position: absolute; height: 3px; background: #34495e; top: 40px; z-index: 1;}
         .electro-saltbridge { position: absolute; width: 80px; height: 60px; border: 15px solid rgba(155, 89, 182, 0.5); border-bottom: none; border-radius: 40px 40px 0 0; top: 50px; left: 50%; transform: translateX(-50%); z-index: 0; }
-        .electro-voltmeter { position: absolute; width: 60px; height: 60px; background: var(--bg-panel); border: 4px solid var(--secondary); border-radius: 50%; top: 10px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; color: var(--secondary); z-index: 5; box-shadow: 0 4px 10px rgba(0,0,0,0.1);}
+        .electro-voltmeter { position: absolute; width: 60px; height: 60px; background: var(--bg-panel); border: 4px solid var(--secondary); border-radius: 50%; top: 10px; left: 50%; transform: translateX(-50%); display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; color: var(--secondary); z-index: 5; box-shadow: 0 4px 10px rgba(0,0,0,0.1); text-align: center; flex-direction: column;}
         .e-flow-arrow { position: absolute; font-size: 20px; top: 15px; color: var(--danger); font-weight: bold; transition: 0.3s;}
 
         /* GHS 危害標示樣式 */
@@ -200,20 +214,20 @@
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <nav class="sidebar" id="sidebar">
-        <div class="sidebar-header">🧪 化學工作站 V4.30</div>
+        <div class="sidebar-header">🧪 化學工作站 V4.38</div>
         <div class="nav-group">核心繪圖與探索</div>
-        <div class="nav-item active" onclick="switchView('view-draw')">✏️ AI 與畫布繪圖</div>
-        <div class="nav-item" onclick="switchView('view-single')">🔍 深度探索與比較 <span style="background:var(--danger); color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:auto;">GHS API</span></div>
-        <div class="nav-item" onclick="switchView('view-periodic')">📊 118 互動週期表</div>
+        <div class="nav-item active" onclick="switchView('view-draw')">✏️ AI 與畫布繪圖 <span style="background:var(--ai); color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:auto;">模板</span></div>
+        <div class="nav-item" onclick="switchView('view-single')">🔍 深度探索與比較 <span style="background:var(--danger); color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:auto;">GHS</span></div>
+        <div class="nav-item" onclick="switchView('view-periodic')">📊 118 互動週期表 <span style="background:var(--danger); color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:auto;">升級</span></div>
         <div class="nav-group">教學資料與實驗</div>
         <div class="nav-item" onclick="switchView('view-reaction')">⚗️ 經典反應資料庫</div>
-        <div class="nav-item" onclick="switchView('view-lab')">🔬 虛擬實驗室 Pro</div>
+        <div class="nav-item" onclick="switchView('view-lab')">🔬 虛擬實驗室 Pro <span style="background:var(--success); color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:auto;">圖表</span></div>
         <div class="nav-group">命題與運算</div>
         <div class="nav-item" onclick="switchView('view-formula')">🧮 綜合命題與公式</div>
         <div class="nav-item" onclick="switchView('view-calc')">⚖️ 進階運算解析</div>
         <div class="nav-item" onclick="switchView('view-news')">📰 時事探究報告</div>
         <div class="nav-group">資產與工具</div>
-        <div class="nav-item" onclick="switchView('view-vault')">🗄️ 數位題庫保險箱</div>
+        <div class="nav-item" onclick="switchView('view-vault')">🗄️ 數位題庫保險箱 <span style="background:var(--success); color:#fff; border-radius:10px; padding:2px 6px; font-size:10px; margin-left:auto;">防爆</span></div>
         <div class="nav-item" onclick="switchView('view-batch')">📦 批量圖檔下載</div>
         
         <div class="nav-group">🛠️ 系統設定</div>
@@ -246,13 +260,26 @@
                     <span id="syncStatus" class="sync-indicator">⚫ 準備就緒</span>
                     <input type="file" id="aiVisionUploader" accept="image/*, application/pdf" style="display: none;" onchange="handleAIVisionUpload(event)">
                 </div>
+
+                <div class="template-library">
+                    <b style="color:var(--secondary); font-size: 14px; user-select: none;">🧩 快速骨架 / 官能基插入：</b>
+                    <button class="btn-outline btn-sm" onclick="loadTemplate('c1ccccc1')">⌬ 苯環</button>
+                    <button class="btn-outline btn-sm" onclick="loadTemplate('C1CCCCC1')">⬡ 環己烷</button>
+                    <button class="btn-outline btn-sm" onclick="loadTemplate('c1ccc2ccccc2c1')">萘</button>
+                    <div style="border-left: 1px solid var(--border-color); height: 20px; margin: 0 5px;"></div>
+                    <button class="btn-outline btn-sm" onclick="loadTemplate('C(=O)O')">羧基 (-COOH)</button>
+                    <button class="btn-outline btn-sm" onclick="loadTemplate('O')">羥基 (-OH)</button>
+                    <button class="btn-outline btn-sm" onclick="loadTemplate('N')">胺基 (-NH₂)</button>
+                    <button class="btn-outline btn-sm" onclick="loadTemplate('[N+](=O)[O-]')">硝基 (-NO₂)</button>
+                    <button class="btn-outline btn-sm" onclick="loadTemplate('C(=O)')">羰基 (C=O)</button>
+                </div>
                 
                 <div class="canvas-layout">
                     <div id="jsme_container"></div>
                     <div class="guide-panel">
                         <h4 style="color:#d35400; margin-top:0;">✨ 雙軌操作指南</h4>
                         <p><b>AI 辨識：</b>上傳圖片，AI 會自動畫出結構。</p>
-                        <p><b>自動補氫：</b>點擊橘色按鈕切換「自動補 H」或「手動教學模式」。</p>
+                        <p><b>快速骨架：</b>點擊上方藍色按鈕，瞬間插入常用化學結構或官能基。</p>
                         <p><b>精確同步：</b>下方畫布 100% 呈現您的繪圖。</p>
                     </div>
                 </div>
@@ -297,9 +324,7 @@
                             <div id="viewer_3D_A" class="viewer-3d" style="margin-top:15px; height:220px; min-height:220px;"></div>
                             
                             <table class="data-table" style="margin-top: 15px;"><tr><th>IUPAC</th><td id="td_iupacA">-</td></tr><tr><th>分子式</th><td id="td_formulaA">-</td></tr><tr><th>分子量</th><td id="td_weightA">-</td></tr></table>
-                            
                             <div id="ghsContainerA"></div>
-
                             <div id="radarChartA" style="height: 250px; margin-top:15px;"></div>
                         </div>
                     </div>
@@ -311,7 +336,6 @@
                             <table class="data-table" style="margin-top: 15px;"><tr><th>IUPAC</th><td id="td_iupacB">-</td></tr><tr><th>分子式</th><td id="td_formulaB">-</td></tr><tr><th>分子量</th><td id="td_weightB">-</td></tr></table>
                             
                             <div id="ghsContainerB"></div>
-
                             <div id="radarChartB" style="height: 250px; margin-top:15px;"></div>
                         </div>
                     </div>
@@ -329,11 +353,25 @@
                     <p style="font-size: 13px; color: var(--text-muted);">點擊按鈕切換不同化學性質的漸層熱力圖。點擊元素可查看該元素的詳細物理與化學數據。</p>
                     <div class="periodic-wrapper"><div id="ptGrid" class="periodic-grid"></div></div>
                 </div>
-                <div class="card" id="elDetailCard" style="display:none; border-left: 4px solid var(--primary);">
-                    <h3 id="elName" style="color:var(--primary); font-size:1.5rem; margin-bottom:5px;">元素</h3>
+                <div class="card" id="elDetailCard" style="display:none; border-left: 4px solid var(--primary); transition: 0.3s;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <h3 id="elName" style="color:var(--primary); font-size:1.5rem; margin-bottom:5px;">元素</h3>
+                            <div style="font-family:monospace; font-size:14px; color:var(--ai); margin-bottom:10px; font-weight:bold;" id="elConfig">電子組態: -</div>
+                        </div>
+                        <button class="btn-ai btn-sm" id="btnExploreElement">🔍 帶入深度探索</button>
+                    </div>
                     <div class="grid-2" style="gap: 10px;">
-                        <p style="color:var(--text-muted); margin-top:0;">原子序：<span id="elZ" style="font-weight:bold;color:var(--text-main);"></span><br>族/週期：<span id="elGP" style="font-weight:bold;color:var(--text-main);"></span></p>
-                        <p style="color:var(--text-muted); margin-top:0;">電負度：<span id="elEn" style="font-weight:bold;color:var(--warning);"></span><br>半徑：<span id="elR" style="font-weight:bold;color:var(--success);"></span><br>第一游離能：<span id="elIE" style="font-weight:bold;color:var(--info);"></span></p>
+                        <p style="color:var(--text-muted); margin-top:0; font-size:13px; line-height:1.6;">
+                            原子序：<span id="elZ" style="font-weight:bold;color:var(--text-main);"></span><br>
+                            族/週期：<span id="elGP" style="font-weight:bold;color:var(--text-main);"></span><br>
+                            常見化合物：<span id="elCpds" style="font-weight:bold;color:var(--text-main);"></span>
+                        </p>
+                        <p style="color:var(--text-muted); margin-top:0; font-size:13px; line-height:1.6;">
+                            電負度：<span id="elEn" style="font-weight:bold;color:var(--warning);"></span><br>
+                            原子半徑：<span id="elR" style="font-weight:bold;color:var(--success);"></span><br>
+                            第一游離能：<span id="elIE" style="font-weight:bold;color:var(--info);"></span>
+                        </p>
                     </div>
                 </div>
             </section>
@@ -376,19 +414,19 @@
                     <h3 style="color: var(--ai); border-left-color: var(--ai);">反應式配平精靈</h3>
                     <div style="display:flex; gap:10px;"><input type="text" id="equationInput" placeholder="例: C6H12O6 + O2 -> CO2 + H2O"><button class="btn-ai" onclick="solveEquation()">自動配平</button></div>
                     <div id="equationResult" class="ai-result-box">等待輸入...</div>
-                    <div style="text-align:right; margin-top:10px;"><button class="btn-outline btn-sm" onclick="toggleClozeWorksheet('equationResult', '化學配平')">📝 轉換學習單</button> <button class="btn-ai btn-sm" onclick="saveToVaultContext('equationResult', '化學配平')">💾 存至題庫</button></div>
+                    <div style="text-align:right; margin-top:10px;"><button class="btn-outline btn-sm" onclick="toggleClozeWorksheet('equationResult', '化學配平', this)">📝 轉換學習單</button> <button class="btn-ai btn-sm" onclick="saveToVaultContext('equationResult', '化學配平')">💾 存至題庫</button></div>
                 </div>
                 <div class="card card-full">
                     <h3 style="color: var(--warning); border-left-color: var(--warning);">限量試劑與產率引擎</h3>
                     <div style="display:flex; gap:10px;"><input type="text" id="limitingInput" placeholder="例: 10g H2 與 50g O2 反應生成 H2O"><button class="btn-warning" onclick="analyzeLimitingReactant()">產率分析</button></div>
                     <div id="limitingResult" class="ai-result-box">等待輸入...</div>
-                    <div style="text-align:right; margin-top:10px;"><button class="btn-outline btn-sm" onclick="toggleClozeWorksheet('limitingResult', '限量試劑')">📝 轉換學習單</button> <button class="btn-ai btn-sm" onclick="saveToVaultContext('limitingResult', '產率分析')">💾 存至題庫</button></div>
+                    <div style="text-align:right; margin-top:10px;"><button class="btn-outline btn-sm" onclick="toggleClozeWorksheet('limitingResult', '限量試劑', this)">📝 轉換學習單</button> <button class="btn-ai btn-sm" onclick="saveToVaultContext('limitingResult', '產率分析')">💾 存至題庫</button></div>
                 </div>
                 <div class="card card-full">
                     <h3 style="color: var(--info); border-left-color: var(--info);">元素質量百分比分析</h3>
                     <div style="display:flex; gap:10px;"><input type="text" id="stoichInput" placeholder="例: C9H8O4 (阿斯匹靈)"><button class="btn-info" onclick="analyzeStoichiometry()">精算</button></div>
                     <div id="stoichResult" class="ai-result-box">等待輸入...</div>
-                    <div style="text-align:right; margin-top:10px;"><button class="btn-outline btn-sm" onclick="toggleClozeWorksheet('stoichResult', '元素分析')">📝 轉換學習單</button> <button class="btn-ai btn-sm" onclick="saveToVaultContext('stoichResult', '元素分析')">💾 存至題庫</button></div>
+                    <div style="text-align:right; margin-top:10px;"><button class="btn-outline btn-sm" onclick="toggleClozeWorksheet('stoichResult', '元素分析', this)">📝 轉換學習單</button> <button class="btn-ai btn-sm" onclick="saveToVaultContext('stoichResult', '元素分析')">💾 存至題庫</button></div>
                 </div>
             </section>
 
@@ -425,55 +463,62 @@
 
                 <div id="lab-electro" class="lab-container">
                     <div class="card card-full" style="background: rgba(52, 152, 219, 0.05); border-color: var(--secondary);">
-                        <h3 style="color:var(--secondary); justify-content:center; margin-bottom: 20px;">⚡ 伽凡尼電池 / 電化學模擬器</h3>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; flex-wrap:wrap; gap:10px;">
+                            <h3 style="color:var(--secondary); margin:0;">⚡ 伽凡尼電池 / 電化學模擬器</h3>
+                            <div style="display:flex; gap:10px;">
+                                <button id="btnModeGalvanic" onclick="setElectroMode('galvanic')" style="padding:6px 12px; font-size:13px; font-weight:bold; cursor:pointer; background:var(--secondary); color:#fff; border:none; border-radius:4px; transition:0.3s;">🔋 原電池 (自發)</button>
+                                <button id="btnModeElectrolytic" onclick="setElectroMode('electrolytic')" style="padding:6px 12px; font-size:13px; font-weight:bold; cursor:pointer; background:transparent; color:var(--text-main); border:1px solid var(--border-color); border-radius:4px; transition:0.3s;">🔌 電解池 (外加)</button>
+                            </div>
+                        </div>
                         <div class="grid-2">
                             <div>
-                                <label style="font-weight:bold;">左側電極 (金屬片):</label>
-                                <select id="electroLeft" onchange="updateElectroSim()" style="margin-bottom:15px;">
-                                    <option value="Zn">鋅 (Zn)</option>
-                                    <option value="Cu">銅 (Cu)</option>
-                                    <option value="Ag">銀 (Ag)</option>
-                                </select>
-                                
-                                <label style="font-weight:bold;">右側電極 (金屬片):</label>
-                                <select id="electroRight" onchange="updateElectroSim()" style="margin-bottom:15px;">
-                                    <option value="Zn">鋅 (Zn)</option>
-                                    <option value="Cu" selected>銅 (Cu)</option>
-                                    <option value="Ag">銀 (Ag)</option>
-                                </select>
-
+                                <div id="galvanicControls">
+                                    <label style="font-weight:bold;">左側電極 (金屬片):</label>
+                                    <select id="electroLeft" onchange="updateElectroSim()" style="margin-bottom:15px;">
+                                        <option value="Zn">鋅 (Zn)</option>
+                                        <option value="Cu">銅 (Cu)</option>
+                                        <option value="Ag">銀 (Ag)</option>
+                                    </select>
+                                    <label style="font-weight:bold;">右側電極 (金屬片):</label>
+                                    <select id="electroRight" onchange="updateElectroSim()" style="margin-bottom:15px;">
+                                        <option value="Zn">鋅 (Zn)</option>
+                                        <option value="Cu" selected>銅 (Cu)</option>
+                                        <option value="Ag">銀 (Ag)</option>
+                                    </select>
+                                </div>
+                                <div id="electrolyticControls" style="display:none;">
+                                    <label style="font-weight:bold; display:block; margin-bottom:5px;">選擇電解情境:</label>
+                                    <select id="electroScenario" onchange="updateElectroSim()" style="margin-bottom:15px;">
+                                        <option value="water">電解水 (加少量 H₂SO₄, Pt電極)</option>
+                                        <option value="ki">電解碘化鉀水溶液 (KI, C電極)</option>
+                                        <option value="cuso4_cu">電鍍：銅電極電解 CuSO₄</option>
+                                    </select>
+                                    <label style="font-weight:bold; display:block; margin-bottom:5px;">外加電壓 (V): <span id="extVoltageVal" style="color:var(--rose);">0.0 V</span></label>
+                                    <input type="range" id="extVoltage" min="0" max="5" step="0.1" value="0" oninput="updateElectroSim()" style="width:100%; margin-bottom:15px;">
+                                </div>
                                 <div style="margin-top:20px; padding: 15px; background: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px;">
                                     <h4 style="margin-top:0; color:var(--primary);">📊 理論計算結果</h4>
-                                    <p style="margin:5px 0;">伏特計讀數 ($E^\circ_{cell}$): <span id="electroV" style="font-weight:bold; color:var(--secondary); font-size:18px;">1.10 V</span></p>
+                                    <p style="margin:5px 0;">系統電壓狀態: <span id="electroV" style="font-weight:bold; color:var(--secondary); font-size:18px;">1.10 V</span></p>
                                     <div id="electroEq" style="margin-top:10px; font-family:monospace; font-size:14px; color:var(--danger); line-height:1.6;">
-                                        e⁻ 流向: Zn ➡️ Cu<br>
-                                        陽極 (-): Zn → Zn²⁺ + 2e⁻<br>
-                                        陰極 (+): Cu²⁺ + 2e⁻ → Cu
+                                        e⁻ 流向: Zn ➡️ Cu<br>陽極 (-): Zn → Zn²⁺ + 2e⁻<br>陰極 (+): Cu²⁺ + 2e⁻ → Cu
                                     </div>
                                 </div>
                             </div>
-                            
                             <div style="position:relative; min-height: 280px; display:flex; justify-content: space-around; align-items: flex-end; padding-top: 40px; background: var(--bg-base); border-radius: 8px; border: 1px inset var(--border-color);">
-                                <div class="electro-voltmeter" id="voltmeterUI">1.10</div>
+                                <div class="electro-voltmeter" id="voltmeterUI" style="flex-direction:column; line-height:1.1;">1.10<br><span style="font-size:10px;color:var(--text-muted);">V</span></div>
                                 <div class="electro-wire" style="left:20%; right:50%;"></div>
                                 <div class="electro-wire" style="left:50%; right:20%;"></div>
                                 <div class="electro-saltbridge"></div>
-                                
                                 <div style="position:relative;">
                                     <div class="e-flow-arrow" id="eFlowLeft" style="left:20px; opacity:0;">⬅️</div>
                                     <div class="electro-electrode" id="electrodeLeftUI" style="background:#7f8c8d;"></div>
-                                    <div class="electro-beaker">
-                                        <div style="position:absolute; bottom:0; width:100%; height:60%; background:rgba(52,152,219,0.3);"></div>
-                                    </div>
+                                    <div class="electro-beaker"><div style="position:absolute; bottom:0; width:100%; height:60%; background:rgba(52,152,219,0.3);"></div></div>
                                     <div style="text-align:center; font-weight:bold; margin-top:10px;" id="labelLeftUI">Zn (陽極)</div>
                                 </div>
-
                                 <div style="position:relative;">
                                     <div class="e-flow-arrow" id="eFlowRight" style="right:20px; opacity:1;">➡️</div>
                                     <div class="electro-electrode" id="electrodeRightUI" style="background:#e67e22;"></div>
-                                    <div class="electro-beaker">
-                                        <div style="position:absolute; bottom:0; width:100%; height:60%; background:rgba(52,152,219,0.3);"></div>
-                                    </div>
+                                    <div class="electro-beaker"><div style="position:absolute; bottom:0; width:100%; height:60%; background:rgba(52,152,219,0.3);"></div></div>
                                     <div style="text-align:center; font-weight:bold; margin-top:10px;" id="labelRightUI">Cu (陰極)</div>
                                 </div>
                             </div>
@@ -484,27 +529,32 @@
                 <div id="lab-lechatelier" class="lab-container">
                     <div class="card card-full" style="background: rgba(241, 196, 15, 0.05); border-color: var(--warning);">
                         <h3 style="color:var(--warning); justify-content:center; margin-bottom: 20px;">⚖️ 勒沙特列原理擾動模擬</h3>
-                        <div class="grid-2">
+                        <div class="grid-2" style="grid-template-columns: 1fr 1.5fr;">
                             <div>
                                 <label style="font-weight:bold; display:block; margin-bottom:10px;">選擇平衡系統:</label>
-                                <select id="lcSystem" onchange="triggerLC('reset')" style="margin-bottom:20px;">
+                                <select id="lcSystem" onchange="initLC()" style="margin-bottom:20px;">
                                     <option value="nh3">N₂ + 3H₂ ⇌ 2NH₃ + 熱 (哈柏法)</option>
                                     <option value="no2">N₂O₄ + 熱 ⇌ 2NO₂ (無色⇌紅棕色)</option>
                                 </select>
                                 
-                                <label style="font-weight:bold; display:block; margin-bottom:10px;">外加環境擾動條件:</label>
-                                <div style="display:flex; flex-wrap:wrap; gap:10px;">
-                                    <button class="btn-outline btn-sm" onclick="triggerLC('temp', 'up')">🌡️ 系統升溫</button>
-                                    <button class="btn-outline btn-sm" onclick="triggerLC('temp', 'down')">❄️ 系統降溫</button>
-                                    <button class="btn-outline btn-sm" onclick="triggerLC('press', 'up')">🗜️ 縮小體積 (加壓)</button>
-                                    <button class="btn-outline btn-sm" onclick="triggerLC('press', 'down')">📦 擴大體積 (減壓)</button>
+                                <label style="font-weight:bold; display:block; margin-bottom:10px;">環境物理擾動:</label>
+                                <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:15px;">
+                                    <button class="btn-outline btn-sm" onclick="triggerLC('temp', 'up')">🌡️ 升溫</button>
+                                    <button class="btn-outline btn-sm" onclick="triggerLC('temp', 'down')">❄️ 降溫</button>
+                                    <button class="btn-outline btn-sm" onclick="triggerLC('press', 'up')">🗜️ 加壓(縮小體積)</button>
+                                    <button class="btn-outline btn-sm" onclick="triggerLC('press', 'down')">📦 減壓(擴大體積)</button>
                                 </div>
+
+                                <label style="font-weight:bold; display:block; margin-bottom:10px;">物質濃度擾動:</label>
+                                <div id="lcConcControls" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:15px;">
+                                    </div>
+                                <button class="btn-danger btn-sm" onclick="initLC()" style="width:100%; margin-top:10px;">🔄 重置平衡</button>
                             </div>
                             
-                            <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; background: var(--bg-base); padding: 20px; border-radius: 8px; border: 1px inset var(--border-color); min-height: 200px;">
-                                <div id="lcVisual" style="font-size: 60px; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); transform-origin: bottom center;">⚖️</div>
-                                <h3 id="lcResult" style="color:var(--primary); margin: 15px 0 5px 0;">目前達成動態平衡</h3>
-                                <p id="lcExplanation" style="color:var(--text-muted); font-size:14px; text-align:center; max-width: 80%;">請選擇左側擾動按鈕，觀察平衡移動方向。</p>
+                            <div style="display:flex; flex-direction:column; background: var(--bg-base); padding: 15px; border-radius: 8px; border: 1px inset var(--border-color);">
+                                <h4 id="lcResult" style="color:var(--primary); margin: 0 0 5px 0; text-align:center;">目前達成動態平衡</h4>
+                                <p id="lcExplanation" style="color:var(--text-muted); font-size:13px; text-align:center; margin-top:0;">請點擊左側擾動條件，觀察濃度柱狀圖變化。</p>
+                                <div id="lcChartContainer" style="flex:1; width:100%; min-height: 250px; margin-top: 10px;"></div>
                             </div>
                         </div>
                     </div>
@@ -609,80 +659,69 @@
 
     <div id="toast-container"></div>
 
-    <script>
-        let jsmeApplet = null;
-        let jsmeReadonlyApplet = null;
-        function jsmeOnLoad() {
-            jsmeApplet = new JSApplet.JSME("jsme_container", "100%", "100%", { options: "newlook,star,nosmiles,nohydrogens" });
-            jsmeApplet.setCallBack("AfterStructureModified", () => { if(typeof onCanvasModified === 'function') onCanvasModified(); });
-            jsmeReadonlyApplet = new JSApplet.JSME("jsme_readonly_container", "100%", "100%", { options: "depict,newlook,nosmiles,nohydrogens" });
-        }
-    </script>
-
 <script>
-    const PUBCHEM_API = "https://pubchem.ncbi.nlm.nih.gov/rest/pug", WIKI_API = "https://zh.wikipedia.org/w/api.php?action=query&prop=langlinks&lllang=en&format=json&origin=*&redirects=1&titles=";
-    let drawDebounceTimer, currentCidA=null, currentNameA="", currentSmilesA="", currentCidB=null, currentNameB="", currentSmilesB="", cachedModelName="", isBilingual=false, selectedBatchChems=new Set(), favoritesList=JSON.parse(localStorage.getItem('chem_favorites')||'[]');
-    let currentQuizContext = { title: "", textContent: "" };
-    let isAutoH = false; 
-
-    // ====== 保留 V4.27 鎖定的全部資料庫 ======
+    // 1. 全域常數定義 (絕對乾淨無重複)
+    const PUBCHEM_API = "https://pubchem.ncbi.nlm.nih.gov/rest/pug";
+    const WIKI_API = "https://zh.wikipedia.org/w/api.php?action=query&prop=langlinks&lllang=en&format=json&origin=*&redirects=1&titles=";
+    const stdPotentials = { 'Zn': -0.76, 'Cu': 0.34, 'Ag': 0.80 };
+    const electroColors = { 'Zn': '#7f8c8d', 'Cu': '#e67e22', 'Ag': '#ecf0f1' };
+    const electroEqs = { 'Zn': { ox: 'Zn → Zn²⁺ + 2e⁻', red: 'Zn²⁺ + 2e⁻ → Zn' }, 'Cu': { ox: 'Cu → Cu²⁺ + 2e⁻', red: 'Cu²⁺ + 2e⁻ → Cu' }, 'Ag': { ox: 'Ag → Ag⁺ + e⁻', red: 'Ag⁺ + e⁻ → Ag' } };
+    const pubchemGhsNames = { 'GHS01': '爆炸物', 'GHS02': '易燃', 'GHS03': '氧化劑', 'GHS04': '高壓氣體', 'GHS05': '腐蝕性', 'GHS06': '急毒性', 'GHS07': '刺激性/危害', 'GHS08': '健康危害', 'GHS09': '環境危害' };
     const commonChemicals = ['水', '二氧化碳', '氯化鈉', '鹽酸', '氫氧化鈉', '硫酸', '硝酸', '氨氣', '甲烷', '乙醇', '乙酸', '苯', '阿斯匹靈', '葡萄糖', '尿素', '三聚氰胺', '維生素C', '咖啡因', '高錳酸鉀', '重鉻酸鉀', '乙酸乙酯', '丙酮', '甲醇', '碳酸鈣'];
     const reactionDB = [ { id: 'r1', name: '1. 酯化反應 (Esterification)', cat: '有機化學', syllabus: 'CJb-Vc-4', eq: '$ \\text{R-COOH} + \\text{R\'-OH} \\rightleftharpoons \\text{R-COOR\'} + \\text{H}_2\\text{O} $', desc: '酸與醇在濃硫酸催化及加熱下生成酯與水，為一可逆反應。濃硫酸擔任催化劑與脫水劑。' }, { id: 'r2', name: '2. 皂化反應 (Saponification)', cat: '有機化學', syllabus: 'CJb-Vc-4', eq: '$ \\text{油脂 (三酸甘油酯)} + 3\\text{NaOH} \\rightarrow \\text{甘油} + 3\\text{脂肪酸鈉 (肥皂)} $', desc: '油脂在鹼性環境下水解，生成甘油與脂肪酸鹽。加入飽和食鹽水可使肥皂析出(鹽析)。' }, { id: 'r3', name: '3. 銀鏡反應 (Tollens\' Test)', cat: '有機化學', syllabus: 'CJb-Vc-5', eq: '$ \\text{R-CHO} + 2[\\text{Ag(NH}_3\\text{)}_2]^+ + 3\\text{OH}^- \\rightarrow \\text{R-COO}^- + 2\\text{Ag} \\downarrow + 4\\text{NH}_3 + 2\\text{H}_2\\text{O} $', desc: '利用多侖試劑(含銀氨錯離子)檢驗醛基的存在。醛被氧化為羧酸根，銀離子被還原為金屬銀附著於試管壁。' }, { id: 'r4', name: '4. 斐林反應 (Fehling\'s Test)', cat: '有機化學', syllabus: 'CJb-Vc-5', eq: '$ \\text{R-CHO} + 2\\text{Cu}^{2+} + 5\\text{OH}^- \\rightarrow \\text{R-COO}^- + \\text{Cu}_2\\text{O} \\downarrow (紅) + 3\\text{H}_2\\text{O} $', desc: '利用斐林試劑檢驗還原醣或脂肪族醛，產生紅色氧化亞銅沉澱。' }, { id: 'r5', name: '5. 烯類的加成 (溴水褪色)', cat: '有機化學', syllabus: 'CJb-Vc-2', eq: '$ \\text{CH}_2\\text{=CH}_2 + \\text{Br}_2 \\rightarrow \\text{CH}_2\\text{Br-CH}_2\\text{Br} $', desc: '不飽和烴(含雙鍵或三鍵)與溴水發生加成反應，使紅棕色的溴水褪色。' }, { id: 'r6', name: '6. 苯的硝化反應', cat: '有機化學', syllabus: 'CJb-Vc-3', eq: '$ \\text{C}_6\\text{H}_6 + \\text{HNO}_3 \\xrightarrow{\\text{H}_2\\text{SO}_4} \\text{C}_6\\text{H}_5\\text{NO}_2 + \\text{H}_2\\text{O} $', desc: '芳香烴的親電取代反應，濃硫酸作為催化劑與脫水劑。' }, { id: 'r7', name: '7. 哈柏法製氨 (Haber Process)', cat: '化學平衡', syllabus: 'CJb-Va-6', eq: '$ \\text{N}_2(g) + 3\\text{H}_2(g) \\rightleftharpoons 2\\text{NH}_3(g) + \\text{熱量} $', desc: '高溫高壓下以鐵粉為催化劑製備氨氣。利用勒沙特列原理，低溫高壓有利於產物生成。' }, { id: 'r8', name: '8. 奧士華法製硝酸', cat: '工業化學', syllabus: 'CJb-Vb-3', eq: '$ 4\\text{NH}_3 + 5\\text{O}_2 \\xrightarrow{\\text{Pt}} 4\\text{NO} + 6\\text{H}_2\\text{O} $', desc: '工業上利用氨氣的催化氧化來製備硝酸的三步驟之首。' }, { id: 'r9', name: '9. 接觸法製硫酸', cat: '工業化學', syllabus: 'CJb-Va-6', eq: '$ 2\\text{SO}_2 + \\text{O}_2 \\xrightleftharpoons{\\text{V}_2\\text{O}_5} 2\\text{SO}_3 $', desc: '工業製硫酸的核心步驟，二氧化硫在五氧化二釩催化下氧化為三氧化硫。' }, { id: 'r10', name: '10. 索耳未法製純鹼', cat: '無機化學', syllabus: 'CJb-Va-2', eq: '$ \\text{NaCl} + \\text{NH}_3 + \\text{CO}_2 + \\text{H}_2\\text{O} \\rightarrow \\text{NaHCO}_3 \\downarrow + \\text{NH}_4\\text{Cl} $', desc: '利用碳酸氫鈉溶解度較小而在氨鹼性鹽水中沉澱的特性來製備小蘇打與純鹼。' }, { id: 'r11', name: '11. 碳酸鈣受熱分解', cat: '化學計量', syllabus: 'CJb-Va-2', eq: '$ \\text{CaCO}_3(s) \\xrightarrow{\\Delta} \\text{CaO}(s) + \\text{CO}_2(g) $', desc: '工業上製備生石灰(氧化鈣)的方法。' }, { id: 'r12', name: '12. 銅與濃硝酸反應', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ \\text{Cu} + 4\\text{HNO}_3\\text{(濃)} \\rightarrow \\text{Cu(NO}_3\\text{)}_2 + 2\\text{NO}_2(g) + 2\\text{H}_2\\text{O} $', desc: '產生紅棕色的二氧化氮有毒氣體。' }, { id: 'r13', name: '13. 銅與稀硝酸反應', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ 3\\text{Cu} + 8\\text{HNO}_3\\text{(稀)} \\rightarrow 3\\text{Cu(NO}_3\\text{)}_2 + 2\\text{NO}(g) + 4\\text{H}_2\\text{O} $', desc: '產生無色的一氧化氮氣體，接觸空氣後會迅速氧化為紅棕色的二氧化氮。' }, { id: 'r14', name: '14. 鉛蓄電池放電', cat: '電化學', syllabus: 'CJb-Vb-5', eq: '$ \\text{Pb} + \\text{PbO}_2 + 2\\text{H}_2\\text{SO}_4 \\rightarrow 2\\text{PbSO}_4 + 2\\text{H}_2\\text{O} $', desc: '放電時，陽極與陰極皆轉化為硫酸鉛，且消耗硫酸導致電解液密度下降。' }, { id: 'r15', name: '15. 過錳酸鉀還原 (酸性)', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ \\text{MnO}_4^- + 8\\text{H}^+ + 5\\text{e}^- \\rightarrow \\text{Mn}^{2+} + 4\\text{H}_2\\text{O} $', desc: '強氧化劑，溶液由紫紅色變為無色(或淡粉紅色)。' }, { id: 'r16', name: '16. 二鉻酸鉀還原 (酸性)', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ \\text{Cr}_2\\text{O}_7^{2-} + 14\\text{H}^+ + 6\\text{e}^- \\rightarrow 2\\text{Cr}^{3+} + 7\\text{H}_2\\text{O} $', desc: '常作為酒測器的原理，溶液由橘紅色變為綠色。' }, { id: 'r17', name: '17. 碘滴定 (與硫代硫酸鈉)', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ \\text{I}_2 + 2\\text{S}_2\\text{O}_3^{2-} \\rightarrow 2\\text{I}^- + \\text{S}_4\\text{O}_6^{2-} $', desc: '分析化學中常搭配澱粉指示劑進行的精確滴定。' }, { id: 'r18', name: '18. 二氧化碳檢驗 (石灰水)', cat: '酸鹼/沉澱', syllabus: 'CJb-Va-2', eq: '$ \\text{Ca(OH)}_2 + \\text{CO}_2 \\rightarrow \\text{CaCO}_3 \\downarrow + \\text{H}_2\\text{O} $', desc: '二氧化碳通入澄清石灰水產生白色碳酸鈣沉澱而變混濁。' }, { id: 'r19', name: '19. 鹵素離子檢驗', cat: '沉澱反應', syllabus: 'CJb-Va-3', eq: '$ \\text{Ag}^+ + \\text{Cl}^- \\rightarrow \\text{AgCl} \\downarrow $', desc: '加入硝酸銀水溶液，產生白色(AgCl)、淡黃色(AgBr)或黃色(AgI)沉澱。' }, { id: 'r20', name: '20. 鉻酸根酸鹼平衡', cat: '化學平衡', syllabus: 'CJb-Va-6', eq: '$ 2\\text{CrO}_4^{2-} (黃) + 2\\text{H}^+ \\rightleftharpoons \\text{Cr}_2\\text{O}_7^{2-} (橘紅) + \\text{H}_2\\text{O} $', desc: '勒沙特列原理經典範例。加酸平衡向右(橘紅)，加鹼平衡向左(黃)。' }, { id: 'r21', name: '21. 雙氧水製氧', cat: '化學動力學', syllabus: 'CJb-Va-5', eq: '$ 2\\text{H}_2\\text{O}_2 \\xrightarrow{\\text{MnO}_2} 2\\text{H}_2\\text{O} + \\text{O}_2 $', desc: '以二氧化錳作為催化劑加速過氧化氫的自身氧化還原分解。' }, { id: 'r22', name: '22. 高爐煉鐵 (還原步驟)', cat: '氧化還原', syllabus: 'CJb-Vb-2', eq: '$ \\text{Fe}_2\\text{O}_3 + 3\\text{CO} \\xrightarrow{\\Delta} 2\\text{Fe} + 3\\text{CO}_2 $', desc: '工業上以一氧化碳作為還原劑，將鐵礦砂還原為生鐵。' }, { id: 'r23', name: '23. 電解水', cat: '電化學', syllabus: 'CJb-Vb-5', eq: '$ 2\\text{H}_2\\text{O} \\xrightarrow{\\text{電解}} 2\\text{H}_2(g) + \\text{O}_2(g) $', desc: '加入少量強電解質導電，陰極產生氫氣，陽極產生氧氣，體積比 2:1。' }, { id: 'r24', name: '24. 光合作用', cat: '生化/熱力學', syllabus: 'CJb-Vb-6', eq: '$ 6\\text{CO}_2 + 6\\text{H}_2\\text{O} \\xrightarrow{\\text{光能}} \\text{C}_6\\text{H}_{12}\\text{O}_6 + 6\\text{O}_2 $', desc: '植物利用光能將無機物轉化為葡萄糖並釋放氧氣的吸熱反應。' } ];
+    
+    // V4.38 週期表擴充資料 (半徑, 游離能, 電子組態, 化合物)
+    const ptDetails = {
+        1:{ec:'1s¹',cpd:'H₂O, CH₄, NH₃, HCl'}, 2:{ec:'1s²',cpd:'無(惰性氣體)'}, 3:{ec:'[He] 2s¹',cpd:'Li₂O, LiCl'}, 4:{ec:'[He] 2s²',cpd:'BeO, BeCl₂'}, 5:{ec:'[He] 2s² 2p¹',cpd:'B₂O₃, H₃BO₃'},
+        6:{ec:'[He] 2s² 2p²',cpd:'CO₂, CO, CH₄, C₂H₅OH'}, 7:{ec:'[He] 2s² 2p³',cpd:'NH₃, HNO₃, NO₂'}, 8:{ec:'[He] 2s² 2p⁴',cpd:'H₂O, H₂O₂, CO₂'}, 9:{ec:'[He] 2s² 2p⁵',cpd:'HF, NaF, CF₄'}, 10:{ec:'[He] 2s² 2p⁶',cpd:'無(惰性氣體)'},
+        11:{ec:'[Ne] 3s¹',cpd:'NaCl, NaOH, Na₂CO₃'}, 12:{ec:'[Ne] 3s²',cpd:'MgO, MgCl₂, MgSO₄'}, 13:{ec:'[Ne] 3s² 3p¹',cpd:'Al₂O₃, AlCl₃'}, 14:{ec:'[Ne] 3s² 3p²',cpd:'SiO₂, SiC'}, 15:{ec:'[Ne] 3s² 3p³',cpd:'P₄O₁₀, H₃PO₄'},
+        16:{ec:'[Ne] 3s² 3p⁴',cpd:'SO₂, H₂SO₄, H₂S'}, 17:{ec:'[Ne] 3s² 3p⁵',cpd:'HCl, NaCl, Cl₂'}, 18:{ec:'[Ne] 3s² 3p⁶',cpd:'無(惰性氣體)'}, 19:{ec:'[Ar] 4s¹',cpd:'KCl, KOH, KNO₃'}, 20:{ec:'[Ar] 4s²',cpd:'CaCO₃, CaO, Ca(OH)₂'},
+        21:{ec:'[Ar] 3d¹ 4s²',cpd:'Sc₂O₃'}, 22:{ec:'[Ar] 3d² 4s²',cpd:'TiO₂'}, 23:{ec:'[Ar] 3d³ 4s²',cpd:'V₂O₅'}, 24:{ec:'[Ar] 3d⁵ 4s¹',cpd:'Cr₂O₇²⁻, CrO₄²⁻'}, 25:{ec:'[Ar] 3d⁵ 4s²',cpd:'MnO₂, KMnO₄'},
+        26:{ec:'[Ar] 3d⁶ 4s²',cpd:'Fe₂O₃, FeCl₃, FeSO₄'}, 27:{ec:'[Ar] 3d⁷ 4s²',cpd:'CoCl₂'}, 28:{ec:'[Ar] 3d⁸ 4s²',cpd:'NiSO₄'}, 29:{ec:'[Ar] 3d¹⁰ 4s¹',cpd:'CuSO₄, CuO'}, 30:{ec:'[Ar] 3d¹⁰ 4s²',cpd:'ZnO, ZnSO₄'},
+        31:{ec:'[Ar] 3d¹⁰ 4s² 4p¹',cpd:'GaAs'}, 32:{ec:'[Ar] 3d¹⁰ 4s² 4p²',cpd:'GeO₂'}, 33:{ec:'[Ar] 3d¹⁰ 4s² 4p³',cpd:'As₂O₃'}, 34:{ec:'[Ar] 3d¹⁰ 4s² 4p⁴',cpd:'H₂Se'}, 35:{ec:'[Ar] 3d¹⁰ 4s² 4p⁵',cpd:'HBr, AgBr'},
+        36:{ec:'[Ar] 3d¹⁰ 4s² 4p⁶',cpd:'無(惰性氣體)'}, 47:{ec:'[Kr] 4d¹⁰ 5s¹',cpd:'AgNO₃, AgCl, AgBr'}, 53:{ec:'[Kr] 4d¹⁰ 5s² 5p⁵',cpd:'HI, KI, I₂'}, 56:{ec:'[Xe] 6s²',cpd:'BaSO₄, BaCl₂'},
+        78:{ec:'[Xe] 4f¹⁴ 5d⁹ 6s¹',cpd:'H₂PtCl₆'}, 79:{ec:'[Xe] 4f¹⁴ 5d¹⁰ 6s¹',cpd:'HAuCl₄'}, 80:{ec:'[Xe] 4f¹⁴ 5d¹⁰ 6s²',cpd:'HgO, HgCl₂'}, 82:{ec:'[Xe] 4f¹⁴ 5d¹⁰ 6s² 6p²',cpd:'PbI₂, PbSO₄'}
+    };
+    
     const ptDataExtra = { 1:{r:53,ie:1312},2:{r:31,ie:2372},3:{r:167,ie:520},4:{r:112,ie:899},5:{r:87,ie:801}, 6:{r:67,ie:1086},7:{r:56,ie:1402},8:{r:48,ie:1314},9:{r:42,ie:1681},10:{r:38,ie:2080}, 11:{r:190,ie:496},12:{r:145,ie:738},13:{r:118,ie:578},14:{r:111,ie:786},15:{r:98,ie:1012}, 16:{r:88,ie:1000},17:{r:79,ie:1251},18:{r:71,ie:1520},19:{r:243,ie:419},20:{r:194,ie:590}, 21:{r:184,ie:633},22:{r:176,ie:658},23:{r:171,ie:650},24:{r:166,ie:653},25:{r:161,ie:717}, 26:{r:156,ie:762},27:{r:152,ie:760},28:{r:149,ie:737},29:{r:145,ie:745},30:{r:142,ie:906}, 31:{r:136,ie:579},32:{r:125,ie:762},33:{r:114,ie:947},34:{r:103,ie:941},35:{r:94,ie:1140}, 36:{r:88,ie:1351},37:{r:265,ie:403},38:{r:219,ie:550},39:{r:212,ie:600},40:{r:206,ie:640}, 41:{r:198,ie:652},42:{r:190,ie:684},43:{r:183,ie:702},44:{r:178,ie:710},45:{r:173,ie:720}, 46:{r:169,ie:804},47:{r:165,ie:731},48:{r:161,ie:868},49:{r:156,ie:558},50:{r:145,ie:709}, 51:{r:133,ie:834},52:{r:123,ie:869},53:{r:115,ie:1008},54:{r:108,ie:1170},55:{r:298,ie:376}, 56:{r:253,ie:503},72:{r:208,ie:658},73:{r:200,ie:761},74:{r:193,ie:770},75:{r:188,ie:760}, 76:{r:185,ie:840},77:{r:180,ie:880},78:{r:177,ie:870},79:{r:174,ie:890},80:{r:171,ie:1007}, 81:{r:156,ie:589},82:{r:154,ie:715},83:{r:143,ie:703},84:{r:135,ie:812},85:{r:127,ie:890}, 86:{r:120,ie:1037} };
     const fullPT = [{z:1,s:'H',n:'氫',en:2.2,g:1,p:1},{z:2,s:'He',n:'氦',en:null,g:18,p:1},{z:3,s:'Li',n:'鋰',en:0.98,g:1,p:2},{z:4,s:'Be',n:'鈹',en:1.57,g:2,p:2},{z:5,s:'B',n:'硼',en:2.04,g:13,p:2},{z:6,s:'C',n:'碳',en:2.55,g:14,p:2},{z:7,s:'N',n:'氮',en:3.04,g:15,p:2},{z:8,s:'O',n:'氧',en:3.44,g:16,p:2},{z:9,s:'F',n:'氟',en:3.98,g:17,p:2},{z:10,s:'Ne',n:'氖',en:null,g:18,p:2},{z:11,s:'Na',n:'鈉',en:0.93,g:1,p:3},{z:12,s:'Mg',n:'鎂',en:1.31,g:2,p:3},{z:13,s:'Al',n:'鋁',en:1.61,g:13,p:3},{z:14,s:'Si',n:'矽',en:1.9,g:14,p:3},{z:15,s:'P',n:'磷',en:2.19,g:15,p:3},{z:16,s:'S',n:'硫',en:2.58,g:16,p:3},{z:17,s:'Cl',n:'氯',en:3.16,g:17,p:3},{z:18,s:'Ar',n:'氬',en:null,g:18,p:3},{z:19,s:'K',n:'鉀',en:0.82,g:1,p:4},{z:20,s:'Ca',n:'鈣',en:1.0,g:2,p:4},{z:21,s:'Sc',n:'鈧',en:1.36,g:3,p:4},{z:22,s:'Ti',n:'鈦',en:1.54,g:4,p:4},{z:23,s:'V',n:'釩',en:1.63,g:5,p:4},{z:24,s:'Cr',n:'鉻',en:1.66,g:6,p:4},{z:25,s:'Mn',n:'錳',en:1.55,g:7,p:4},{z:26,s:'Fe',n:'鐵',en:1.83,g:8,p:4},{z:27,s:'Co',n:'鈷',en:1.88,g:9,p:4},{z:28,s:'Ni',n:'鎳',en:1.91,g:10,p:4},{z:29,s:'Cu',n:'銅',en:1.9,g:11,p:4},{z:30,s:'Zn',n:'鋅',en:1.65,g:12,p:4},{z:31,s:'Ga',n:'鎵',en:1.81,g:13,p:4},{z:32,s:'Ge',n:'鍺',en:2.01,g:14,p:4},{z:33,s:'As',n:'砷',en:2.18,g:15,p:4},{z:34,s:'Se',n:'硒',en:2.55,g:16,p:4},{z:35,s:'Br',n:'溴',en:2.96,g:17,p:4},{z:36,s:'Kr',n:'氪',en:3.0,g:18,p:4},{z:37,s:'Rb',n:'銣',en:0.82,g:1,p:5},{z:38,s:'Sr',n:'鍶',en:0.95,g:2,p:5},{z:39,s:'Y',n:'釔',en:1.22,g:3,p:5},{z:40,s:'Zr',n:'鋯',en:1.33,g:4,p:5},{z:41,s:'Nb',n:'鈮',en:1.6,g:5,p:5},{z:42,s:'Mo',n:'鉬',en:2.16,g:6,p:5},{z:43,s:'Tc',n:'鎝',en:1.9,g:7,p:5},{z:44,s:'Ru',n:'釕',en:2.2,g:8,p:5},{z:45,s:'Rh',n:'銠',en:2.28,g:9,p:5},{z:46,s:'Pd',n:'鈀',en:2.2,g:10,p:5},{z:47,s:'Ag',n:'銀',en:1.93,g:11,p:5},{z:48,s:'Cd',n:'鎘',en:1.69,g:12,p:5},{z:49,s:'In',n:'銦',en:1.78,g:13,p:5},{z:50,s:'Sn',n:'錫',en:1.96,g:14,p:5},{z:51,s:'Sb',n:'銻',en:2.05,g:15,p:5},{z:52,s:'Te',n:'碲',en:2.1,g:16,p:5},{z:53,s:'I',n:'碘',en:2.66,g:17,p:5},{z:54,s:'Xe',n:'氙',en:2.6,g:18,p:5},{z:55,s:'Cs',n:'銫',en:0.79,g:1,p:6},{z:56,s:'Ba',n:'鋇',en:0.89,g:2,p:6},{z:72,s:'Hf',n:'鉿',en:1.3,g:4,p:6},{z:73,s:'Ta',n:'鉭',en:1.5,g:5,p:6},{z:74,s:'W',n:'鎢',en:2.36,g:6,p:6},{z:75,s:'Re',n:'錸',en:1.9,g:7,p:6},{z:76,s:'Os',n:'鋨',en:2.2,g:8,p:6},{z:77,s:'Ir',n:'銥',en:2.2,g:9,p:6},{z:78,s:'Pt',n:'鉑',en:2.28,g:10,p:6},{z:79,s:'Au',n:'金',en:2.54,g:11,p:6},{z:80,s:'Hg',n:'汞',en:2.0,g:12,p:6},{z:81,s:'Tl',n:'鉈',en:1.62,g:13,p:6},{z:82,s:'Pb',n:'鉛',en:2.33,g:14,p:6},{z:83,s:'Bi',n:'鉍',en:2.02,g:15,p:6},{z:84,s:'Po',n:'釙',en:2.0,g:16,p:6},{z:85,s:'At',n:'砈',en:2.2,g:17,p:6},{z:86,s:'Rn',n:'氡',en:null,g:18,p:6},{z:87,s:'Fr',n:'鍅',en:0.7,g:1,p:7},{z:88,s:'Ra',n:'鐳',en:0.9,g:2,p:7},{z:104,s:'Rf',n:'鑪',en:null,g:4,p:7},{z:105,s:'Db',n:'𨧀',en:null,g:5,p:7},{z:106,s:'Sg',n:'𨭎',en:null,g:6,p:7},{z:107,s:'Bh',n:'𨨏',en:null,g:7,p:7},{z:108,s:'Hs',n:'𨭆',en:null,g:8,p:7},{z:109,s:'Mt',n:'䥑',en:null,g:9,p:7},{z:110,s:'Ds',n:'鐽',en:null,g:10,p:7},{z:111,s:'Rg',n:'錀',en:null,g:11,p:7},{z:112,s:'Cn',n:'鎶',en:null,g:12,p:7},{z:113,s:'Nh',n:'鉨',en:null,g:13,p:7},{z:114,s:'Fl',n:'鈇',en:null,g:14,p:7},{z:115,s:'Mc',n:'鏌',en:null,g:15,p:7},{z:116,s:'Lv',n:'鉝',en:null,g:16,p:7},{z:117,s:'Ts',n:'鿬',en:null,g:17,p:7},{z:118,s:'Og',n:'鿫',en:null,g:18,p:7}];
 
-    // ====== P3: 終極防護版 GHS 動態 API ======
-    const pubchemGhsNames = {
-        'GHS01': '爆炸物', 'GHS02': '易燃', 'GHS03': '氧化劑', 'GHS04': '高壓氣體',
-        'GHS05': '腐蝕性', 'GHS06': '急毒性', 'GHS07': '刺激性/危害', 'GHS08': '健康危害', 'GHS09': '環境危害'
+    // 2. 全域變數定義
+    let drawDebounceTimer;
+    let currentCidA=null, currentNameA="", currentSmilesA="", currentCidB=null, currentNameB="", currentSmilesB="";
+    let cachedModelName="", isBilingual=false;
+    let selectedBatchChems=new Set();
+    let favoritesList=JSON.parse(localStorage.getItem('chem_favorites')||'[]');
+    let currentQuizContext = { title: "", textContent: "" };
+    let isAutoH = false; 
+    let currentElectroMode = 'galvanic';
+    let activeVaultTag = null;
+    let titrationData = []; 
+    
+    // V4.38 勒沙特列狀態
+    let lcCurrentData = [];
+    const lcSystems = {
+        'nh3': { reactants: ['N₂', 'H₂'], products: ['NH₃'], initial: [ {name:'N₂', v:2}, {name:'H₂', v:6}, {name:'NH₃', v:4} ], color: ['#3498db', '#9b59b6', '#2ecc71'] },
+        'no2': { reactants: ['N₂O₄'], products: ['NO₂'], initial: [ {name:'N₂O₄', v:3}, {name:'NO₂', v:6} ], color: ['#e67e22', '#e74c3c'] }
     };
 
-    async function fetchGHSFromPubChem(cid) {
-        try {
-            let res = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/${cid}/JSON?heading=GHS+Classification`);
-            if (!res.ok) {
-                res = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/${cid}/JSON?heading=Safety+and+Hazards`);
-            }
-            if (!res.ok) return [];
-            
-            const textData = await res.text();
-            const matches = textData.match(/GHS0[1-9]/g);
-            
-            if (matches) {
-                return Array.from(new Set(matches)).sort();
-            }
-            return [];
-        } catch (e) {
-            console.error("GHS Fetch Error:", e);
-            return [];
-        }
-    }
-
-    // ==========================================
-    // 核心初始化 (加入 Try-Catch 防止連鎖崩潰)
-    // ==========================================
+    // 3. 初始化函式
     window.onload = function() {
-        try { checkApiKeyStatus(); } catch(e){}
-        try { initBatchTags(); } catch(e){}
-        try { renderPeriodicTable('standard'); } catch(e){}
-        try { renderReactionDB(); } catch(e){}
-        try { renderFavorites(); } catch(e){}
+        try { checkApiKeyStatus(); } catch(e){ console.error(e); }
+        try { initBatchTags(); } catch(e){ console.error(e); }
+        try { renderPeriodicTable('standard'); } catch(e){ console.error(e); }
+        try { renderReactionDB(); } catch(e){ console.error(e); }
+        try { renderFavorites(); } catch(e){ console.error(e); }
+        setTimeout(() => { try { if(window.Recharts) { updateTitrationSim(); initLC(); } } catch(e){} }, 500);
+        try { updateLabBoyle(); updateLabMolarity(); updateLabPH(); updateLabHeat(); updateElectroSim(); } catch(e){ console.error(e); }
+        try { const searchParam = new URLSearchParams(window.location.search).get('search'); if (searchParam) { document.getElementById('chemName').value = searchParam; switchView('view-single'); searchSingle(false); } } catch(e){}
+        try { loadVault(); } catch(e){ console.error(e); }
         
-        setTimeout(() => { 
-            try { if(window.Recharts) updateTitrationSim(); } catch(e){} 
-        }, 500);
-        
-        try { updateLabBoyle(); updateLabMolarity(); updateLabPH(); updateLabHeat(); updateElectroSim(); } catch(e){}
-        
-        try {
-            const searchParam = new URLSearchParams(window.location.search).get('search');
-            if (searchParam) { document.getElementById('chemName').value = searchParam; switchView('view-single'); searchSingle(false); }
-        } catch(e){}
-        
-        try { loadVault(); } catch(e){}
+        // 確保 JSME 正確載入
+        if(typeof JSApplet !== 'undefined' && !jsmeApplet) jsmeOnLoad();
     }
 
-    // ====== UI 控制 ======
+    // 4. UI 核心切換功能
     function switchView(id) {
         try {
             document.querySelectorAll('.view-section, .nav-item').forEach(el => el.classList.remove('active'));
@@ -690,56 +729,27 @@
             const nav = document.querySelector(`.nav-item[onclick*="${id}"]`);
             if(nav) { 
                 nav.classList.add('active'); 
-                // V4.30 修復：只抓取主文字，避免抓到標籤如「防護」字樣
                 let cleanTitle = nav.childNodes[0].nodeValue ? nav.childNodes[0].nodeValue.trim() : nav.innerText;
-                const mTitle = document.getElementById('mobileTitle');
-                if (mTitle) mTitle.innerText = cleanTitle; 
-                const pTitle = document.getElementById('pageTitleText');
-                if (pTitle) pTitle.innerText = cleanTitle; 
+                const mTitle = document.getElementById('mobileTitle'); if (mTitle) mTitle.innerText = cleanTitle; 
+                const pTitle = document.getElementById('pageTitleText'); if (pTitle) pTitle.innerText = cleanTitle; 
             }
             if(window.innerWidth <= 768) toggleSidebar(false);
             if(id === 'view-draw' && window.jsmeApplet) window.dispatchEvent(new Event('resize'));
-            if(id === 'view-lab') updateTitrationSim();
+            if(id === 'view-lab') { updateTitrationSim(); initLC(); }
             if(id === 'view-vault') loadVault(); 
             if(window.MathJax && target) MathJax.typesetPromise([target]).catch(e=>{});
         } catch(err) { console.error("switchView error:", err); }
     }
-
     function toggleSidebar(f) { const s=document.getElementById('sidebar'), o=document.getElementById('sidebarOverlay'); if(f===false||s.classList.contains('open')){s.classList.remove('open');o.classList.remove('open');}else{s.classList.add('open');o.classList.add('open');} }
     function toggleTheme() { const b=document.body; b.setAttribute('data-theme', b.getAttribute('data-theme')==='dark'?'light':'dark'); showToast('切換主題'); }
     function showToast(m) { const c=document.getElementById('toast-container'), t=document.createElement('div'); t.className='toast'; t.innerText=m; c.appendChild(t); setTimeout(()=>{t.style.opacity='0';setTimeout(()=>t.remove(),300);},3000); }
     function toggleBilingual() { isBilingual=!isBilingual; document.getElementById('bilingualText').innerText=isBilingual?'雙語模式 (CLIL)':'一般模式 (中文)'; showToast('切換語言'); }
     function toggleModalAnswers() { const c=document.getElementById('quizModalContainer'), b=document.getElementById('modalToggleAnsBtn'); c.classList.toggle('hide-answers'); b.innerText=c.classList.contains('hide-answers')?'📝 顯示解答':'👁️ 隱藏解答'; }
 
-    // ====== API 金鑰設定 ======
-    function openApiModal() { 
-        document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || ''; 
-        document.getElementById('apiModal').style.display = 'flex'; 
-    }
-    function saveApi() { 
-        const key = document.getElementById('apiKeyInput').value.trim(); 
-        if(key){ 
-            localStorage.setItem('gemini_api_key', key); 
-            cachedModelName=""; 
-            document.getElementById('apiModal').style.display='none'; 
-            checkApiKeyStatus(); 
-            showToast("金鑰儲存成功！"); 
-        } 
-    }
-    function checkApiKeyStatus() { 
-        const key = localStorage.getItem('gemini_api_key');
-        const btn = document.getElementById('apiKeyBtn'); 
-        if (btn) {
-            if (key) { 
-                btn.innerHTML = "✅ 金鑰已設定"; 
-                btn.style.color = "var(--success)"; 
-            } else { 
-                btn.innerHTML = "🔑 設定金鑰"; 
-                btn.style.color = "var(--text-sidebar)"; 
-            } 
-        }
-    }
-
+    // 5. API 金鑰設定
+    function openApiModal() { document.getElementById('apiKeyInput').value = localStorage.getItem('gemini_api_key') || ''; document.getElementById('apiModal').style.display = 'flex'; }
+    function saveApi() { const key = document.getElementById('apiKeyInput').value.trim(); if(key){ localStorage.setItem('gemini_api_key', key); cachedModelName=""; document.getElementById('apiModal').style.display='none'; checkApiKeyStatus(); showToast("金鑰儲存成功！"); } }
+    function checkApiKeyStatus() { const key = localStorage.getItem('gemini_api_key'); const btn = document.getElementById('apiKeyBtn'); if (btn) { if (key) { btn.innerHTML = "✅ 金鑰已設定"; btn.style.color = "var(--success)"; } else { btn.innerHTML = "🔑 設定金鑰"; btn.style.color = "var(--text-sidebar)"; } } }
     async function getBestModel(apiKey) {
         if(cachedModelName) return cachedModelName;
         try {
@@ -752,7 +762,7 @@
         } catch(e) { return 'gemini-2.5-flash'; }
     }
 
-    // ====== 虛擬實驗室 Pro 頁籤切換修復 ======
+    // 6. 虛擬實驗室 (原電池/電解池/滴定/勒沙特列)
     function switchLab(labId) {
         document.querySelectorAll('.lab-btn').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.lab-container').forEach(el => el.classList.remove('active'));
@@ -760,146 +770,223 @@
         if(btn) btn.classList.add('active');
         document.getElementById(labId).classList.add('active');
         if(labId === 'lab-titration' && window.Recharts) updateTitrationSim(); 
+        if(labId === 'lab-lechatelier' && window.Recharts) initLC(); 
     }
-    
-    // ====== 電化學與勒沙特列模擬器邏輯 ======
-    function updateElectroSim() {
-        const left = document.getElementById('electroLeft').value;
-        const right = document.getElementById('electroRight').value;
-        const eLeft = stdPotentials[left], eRight = stdPotentials[right];
-        
-        document.getElementById('electrodeLeftUI').style.background = electroColors[left];
-        document.getElementById('electrodeRightUI').style.background = electroColors[right];
-        
-        if (left === right) {
-            document.getElementById('electroV').innerText = '0.00 V';
-            document.getElementById('voltmeterUI').innerText = '0.00';
-            document.getElementById('electroEq').innerHTML = '無電位差，不發生反應。';
-            document.getElementById('eFlowLeft').style.opacity = 0; document.getElementById('eFlowRight').style.opacity = 0;
-            document.getElementById('labelLeftUI').innerText = `${left}`; document.getElementById('labelRightUI').innerText = `${right}`;
-            return;
-        }
-        
-        let v = 0.00, flow = '', eqOx = '', eqRed = '';
-        if (eLeft < eRight) {
-            v = eRight - eLeft; flow = `${left} ➡️ ${right}`;
-            eqOx = electroEqs[left].ox; eqRed = electroEqs[right].red;
-            document.getElementById('eFlowLeft').style.opacity = 0; document.getElementById('eFlowRight').style.opacity = 1;
-            document.getElementById('labelLeftUI').innerText = `${left} (陽極/負極)`; document.getElementById('labelRightUI').innerText = `${right} (陰極/正極)`;
+    function setElectroMode(mode) {
+        currentElectroMode = mode;
+        const btnG = document.getElementById('btnModeGalvanic'), btnE = document.getElementById('btnModeElectrolytic');
+        if (mode === 'galvanic') {
+            btnG.style.background = 'var(--secondary)'; btnG.style.color = '#fff'; btnG.style.border = 'none';
+            btnE.style.background = 'transparent'; btnE.style.color = 'var(--text-main)'; btnE.style.border = '1px solid var(--border-color)';
+            document.getElementById('galvanicControls').style.display = 'block'; document.getElementById('electrolyticControls').style.display = 'none';
         } else {
-            v = eLeft - eRight; flow = `${right} ➡️ ${left}`;
-            eqOx = electroEqs[right].ox; eqRed = electroEqs[left].red;
-            document.getElementById('eFlowLeft').style.opacity = 1; document.getElementById('eFlowRight').style.opacity = 0;
-            document.getElementById('labelLeftUI').innerText = `${left} (陰極/正極)`; document.getElementById('labelRightUI').innerText = `${right} (陽極/負極)`;
+            btnE.style.background = 'var(--rose)'; btnE.style.color = '#fff'; btnE.style.border = 'none';
+            btnG.style.background = 'transparent'; btnG.style.color = 'var(--text-main)'; btnG.style.border = '1px solid var(--border-color)';
+            document.getElementById('galvanicControls').style.display = 'none'; document.getElementById('electrolyticControls').style.display = 'block';
         }
-        
-        document.getElementById('electroV').innerText = v.toFixed(2) + ' V';
-        document.getElementById('voltmeterUI').innerText = v.toFixed(2);
-        document.getElementById('electroEq').innerHTML = `e⁻ 流向: ${flow}<br>陽極 (-): ${eqOx}<br>陰極 (+): ${eqRed}`;
+        updateElectroSim();
+    }
+    function updateElectroSim() {
+        if (currentElectroMode === 'galvanic') {
+            const left = document.getElementById('electroLeft').value, right = document.getElementById('electroRight').value;
+            const eLeft = stdPotentials[left], eRight = stdPotentials[right];
+            document.getElementById('electrodeLeftUI').style.background = electroColors[left]; document.getElementById('electrodeRightUI').style.background = electroColors[right];
+            if (left === right) {
+                document.getElementById('electroV').innerText = '0.00 V'; document.getElementById('voltmeterUI').innerHTML = '0.00<br><span style="font-size:10px;color:var(--text-muted);">V</span>';
+                document.getElementById('electroEq').innerHTML = '無電位差，不發生反應。'; document.getElementById('eFlowLeft').style.opacity = 0; document.getElementById('eFlowRight').style.opacity = 0;
+                document.getElementById('labelLeftUI').innerText = `${left}`; document.getElementById('labelRightUI').innerText = `${right}`; return;
+            }
+            let v = 0.00, flow = '', eqOx = '', eqRed = '';
+            if (eLeft < eRight) {
+                v = eRight - eLeft; flow = `${left} ➡️ ${right}`; eqOx = electroEqs[left].ox; eqRed = electroEqs[right].red;
+                document.getElementById('eFlowLeft').style.opacity = 0; document.getElementById('eFlowRight').style.opacity = 1;
+                document.getElementById('labelLeftUI').innerText = `${left} (陽極/負極)`; document.getElementById('labelRightUI').innerText = `${right} (陰極/正極)`;
+            } else {
+                v = eLeft - eRight; flow = `${right} ➡️ ${left}`; eqOx = electroEqs[right].ox; eqRed = electroEqs[left].red;
+                document.getElementById('eFlowLeft').style.opacity = 1; document.getElementById('eFlowRight').style.opacity = 0;
+                document.getElementById('labelLeftUI').innerText = `${left} (陰極/正極)`; document.getElementById('labelRightUI').innerText = `${right} (陽極/負極)`;
+            }
+            document.getElementById('electroV').innerText = v.toFixed(2) + ' V'; document.getElementById('voltmeterUI').innerHTML = v.toFixed(2) + '<br><span style="font-size:10px;color:var(--text-muted);">V</span>';
+            document.getElementById('electroEq').innerHTML = `e⁻ 流向: ${flow}<br>陽極 (-): ${eqOx}<br>陰極 (+): ${eqRed}`;
+        } else {
+            const scenario = document.getElementById('electroScenario').value, extV = parseFloat(document.getElementById('extVoltage').value);
+            document.getElementById('extVoltageVal').innerText = extV.toFixed(1) + ' V';
+            let threshold = 0, anode = '', cathode = '', eqOx = '', eqRed = '', colorL = '#95a5a6', colorR = '#95a5a6', labelL = '', labelR = '';
+            if (scenario === 'water') { threshold = 1.23; anode = 'Pt'; cathode = 'Pt'; eqOx = '2H₂O → O₂ + 4H⁺ + 4e⁻'; eqRed = '2H₂O + 2e⁻ → H₂ + 2OH⁻'; labelL = 'Pt (陽極/正極)'; labelR = 'Pt (陰極/負極)'; colorL = '#bdc3c7'; colorR = '#bdc3c7'; }
+            else if (scenario === 'ki') { threshold = 1.5; anode = 'C'; cathode = 'C'; eqOx = '2I⁻ → I₂ + 2e⁻'; eqRed = '2H₂O + 2e⁻ → H₂ + 2OH⁻'; labelL = 'C (陽極/正極)'; labelR = 'C (陰極/負極)'; colorL = '#34495e'; colorR = '#34495e'; }
+            else if (scenario === 'cuso4_cu') { threshold = 0.1; anode = 'Cu'; cathode = 'Cu'; eqOx = 'Cu → Cu²⁺ + 2e⁻'; eqRed = 'Cu²⁺ + 2e⁻ → Cu'; labelL = 'Cu (陽極/正極)'; labelR = 'Cu (陰極/負極)'; colorL = '#e67e22'; colorR = '#e67e22'; }
+            document.getElementById('electrodeLeftUI').style.background = colorL; document.getElementById('electrodeRightUI').style.background = colorR;
+            document.getElementById('voltmeterUI').innerHTML = '🔋<br><span style="font-size:10px;color:var(--rose);">外加電源</span>';
+            if (extV > threshold) {
+                document.getElementById('electroV').innerText = `外加 ${extV.toFixed(1)} V (大於分解電壓 ${threshold}V)`; document.getElementById('electroEq').innerHTML = `e⁻ 強制流向: 左 ➡️ 右<br>陽極 (+): ${eqOx}<br>陰極 (-): ${eqRed}`;
+                document.getElementById('eFlowLeft').style.opacity = 0; document.getElementById('eFlowRight').style.opacity = 1; document.getElementById('labelLeftUI').innerText = labelL; document.getElementById('labelRightUI').innerText = labelR;
+            } else {
+                document.getElementById('electroV').innerText = `外加 ${extV.toFixed(1)} V (低於分解電壓 ${threshold}V)`; document.getElementById('electroEq').innerHTML = `外加電壓不足以驅動非自發反應。`;
+                document.getElementById('eFlowLeft').style.opacity = 0; document.getElementById('eFlowRight').style.opacity = 0; document.getElementById('labelLeftUI').innerText = `${anode} (無反應)`; document.getElementById('labelRightUI').innerText = `${cathode} (無反應)`;
+            }
+        }
+    }
+    function updateTitrationSim() {
+        const vA=parseFloat(document.getElementById('titrationSlider').value), ind=document.getElementById('indicatorSelect').value, vB=25, cB=0.1, cA=0.1, mO=vB*cB, mH=vA*cA, tv=vB+vA;
+        let ph=mH<mO?14+Math.log10((mO-mH)/tv):(mH===mO?7:-Math.log10((mH-mO)/tv)); ph=Math.max(1,Math.min(14,ph));
+        document.getElementById('titrationPHVal').innerText=ph.toFixed(2); document.getElementById('titrationVolVal').innerText=vA.toFixed(1);
+        const lq=document.getElementById('flaskLiquidSim'); lq.style.height=`${40+(vA/50)*50}%`;
+        if(ind==='phenolphthalein') lq.style.backgroundColor=ph>=10?'rgba(255,20,147,0.7)':(ph>8.2?`rgba(255,20,147,${0.1+((ph-8.2)/1.8)*0.6})`:'rgba(255,255,255,0.2)');
+        else lq.style.backgroundColor=ph<=4.4?'rgba(231,76,60,0.7)':(ph>=6.2?'rgba(241,196,15,0.7)':`rgba(${231+(ph-4.4)/1.8*10},${76+(ph-4.4)/1.8*120},${60-(ph-4.4)/1.8*45},0.7)`);
+        titrationData=[]; for(let v=0;v<=50;v+=0.5){let p, hh=v*cA;if(hh<mO) p=14+Math.log10((mO-hh)/(vB+v));else if(hh===mO) p=7;else p=-Math.log10((hh-mO)/(vB+v)); titrationData.push({vol:v,pH:Math.max(1,Math.min(14,p))});}
+        if(window.Recharts){
+            const {LineChart,Line,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer,ReferenceDot}=window.Recharts;
+            const C=()=>React.createElement(ResponsiveContainer,{width:"100%",height:"100%"},React.createElement(LineChart,{data:titrationData,margin:{top:10,right:10,left:-20,bottom:0}},React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"var(--border-color)"}),React.createElement(XAxis,{dataKey:"vol",type:"number",domain:[0,50],tick:{fill:'var(--text-muted)'}}),React.createElement(YAxis,{domain:[0,14],tick:{fill:'var(--text-muted)'}}),React.createElement(Tooltip,{contentStyle:{backgroundColor:'var(--bg-panel)',color:'var(--text-main)'}}),React.createElement(Line,{type:"monotone",dataKey:"pH",stroke:"var(--rose)",strokeWidth:3,dot:false}),React.createElement(ReferenceDot,{x:vA,y:ph,r:6,fill:"var(--primary)",stroke:"none"})));
+            ReactDOM.render(React.createElement(C),document.getElementById('titrationChartContainer'));
+        }
     }
 
-    function triggerLC(action, direction) {
-        const sys = document.getElementById('lcSystem').value;
-        const visual = document.getElementById('lcVisual');
-        const res = document.getElementById('lcResult');
-        const exp = document.getElementById('lcExplanation');
+    // V4.38 勒沙特列量化動態圖表
+    function initLC() {
+        const sysId = document.getElementById('lcSystem').value;
+        const sys = lcSystems[sysId];
+        lcCurrentData = sys.initial.map(d => ({ name: d.name, '原平衡': d.v, '擾動瞬間': d.v, '新平衡': d.v }));
+        document.getElementById('lcResult').innerText = '目前達成動態平衡';
+        document.getElementById('lcResult').style.color = 'var(--primary)';
+        document.getElementById('lcExplanation').innerText = '請點擊左側擾動條件，觀察濃度柱狀圖變化。';
         
-        if (action === 'reset') {
-            visual.style.transform = 'rotate(0deg)';
-            res.innerText = '目前達成動態平衡'; res.style.color = 'var(--primary)';
-            exp.innerText = '請選擇左側擾動按鈕，觀察平衡移動方向。';
-            return;
-        }
-        
-        let tilt = 0, shiftStr = '', expStr = '';
-        if (sys === 'nh3') {
-            if (action === 'temp' && direction === 'up') { tilt = -15; shiftStr = '平衡向左移動'; expStr = '升溫有利於吸熱方向 (向左)，NH₃ 產率下降。'; }
-            if (action === 'temp' && direction === 'down') { tilt = 15; shiftStr = '平衡向右移動'; expStr = '降溫有利於放熱方向 (向右)，NH₃ 產率上升。'; }
-            if (action === 'press' && direction === 'up') { tilt = 15; shiftStr = '平衡向右移動'; expStr = '加壓(體積縮小)有利於氣體莫耳數減少的方向 (向右)，NH₃ 產率上升。'; }
-            if (action === 'press' && direction === 'down') { tilt = -15; shiftStr = '平衡向左移動'; expStr = '減壓(體積擴大)有利於氣體莫耳數增加的方向 (向左)，NH₃ 產率下降。'; }
-        } else if (sys === 'no2') {
-            if (action === 'temp' && direction === 'up') { tilt = 15; shiftStr = '平衡向右移動'; expStr = '升溫有利於吸熱方向 (向右)，NO₂ 濃度增加，顏色變深。'; }
-            if (action === 'temp' && direction === 'down') { tilt = -15; shiftStr = '平衡向左移動'; expStr = '降溫有利於放熱方向 (向左)，N₂O₄ 濃度增加，顏色變淺。'; }
-            if (action === 'press' && direction === 'up') { tilt = -15; shiftStr = '平衡向左移動'; expStr = '加壓有利於氣體莫耳數減少的方向 (向左)，顏色先變深後稍微變淺。'; }
-            if (action === 'press' && direction === 'down') { tilt = 15; shiftStr = '平衡向右移動'; expStr = '減壓有利於氣體莫耳數增加的方向 (向右)，顏色先變淺後稍微變深。'; }
-        }
-        
-        visual.style.transform = `rotate(${tilt}deg)`;
-        res.innerText = shiftStr;
-        res.style.color = tilt === 15 ? 'var(--success)' : 'var(--danger)';
-        exp.innerText = expStr;
+        const cCtrl = document.getElementById('lcConcControls');
+        let btns = '';
+        sys.reactants.forEach(r => {
+            btns += `<button class="btn-outline btn-sm" onclick="triggerLC('add', '${r}')">➕ 加 ${r}</button>`;
+            btns += `<button class="btn-outline btn-sm" onclick="triggerLC('remove', '${r}')">➖ 抽 ${r}</button>`;
+        });
+        sys.products.forEach(p => {
+            btns += `<button class="btn-outline btn-sm" onclick="triggerLC('add', '${p}')">➕ 加 ${p}</button>`;
+            btns += `<button class="btn-outline btn-sm" onclick="triggerLC('remove', '${p}')">➖ 抽 ${p}</button>`;
+        });
+        cCtrl.innerHTML = btns;
+        renderLCChart(lcCurrentData);
     }
 
-    // ====== 無損文字處理 ======
+    function triggerLC(action, param) {
+        const sysId = document.getElementById('lcSystem').value;
+        const sys = lcSystems[sysId];
+        let newData = JSON.parse(JSON.stringify(lcCurrentData));
+        
+        newData.forEach(d => { d['原平衡'] = d['新平衡']; });
+
+        let shift = 0, exp = '', shiftStr = '';
+        
+        if (action === 'temp') {
+            if (sysId === 'nh3') { 
+                shift = param === 'up' ? -1 : 1;
+                exp = param === 'up' ? '升溫有利於吸熱方向(向左)，NH₃ 產率下降。' : '降溫有利於放熱方向(向右)，生成更多 NH₃。';
+            } else { 
+                shift = param === 'up' ? 1 : -1;
+                exp = param === 'up' ? '升溫有利於吸熱方向(向右)，NO₂ 濃度增加(紅棕色變深)。' : '降溫有利於放熱方向(向左)，N₂O₄ 濃度增加(顏色變淺)。';
+            }
+            newData.forEach(d => { d['擾動瞬間'] = d['原平衡']; }); 
+        } else if (action === 'press') {
+            const factor = param === 'up' ? 1.5 : 0.6; 
+            newData.forEach(d => { d['擾動瞬間'] = d['原平衡'] * factor; });
+            if (sysId === 'nh3') { 
+                shift = param === 'up' ? 1 : -1;
+                exp = param === 'up' ? '加壓(縮小體積)各濃度瞬間變大，隨後平衡向氣體莫耳數少的一方(向右)移動。' : '減壓(擴大體積)各濃度瞬間變小，隨後平衡向氣體莫耳數多的一方(向左)移動。';
+            } else { 
+                shift = param === 'up' ? -1 : 1;
+                exp = param === 'up' ? '加壓(縮小體積)各濃度瞬間變大，平衡向氣體莫耳數少的一方(向左)移動。' : '減壓(擴大體積)各濃度瞬間變小，平衡向氣體莫耳數多的一方(向右)移動。';
+            }
+        } else if (action === 'add' || action === 'remove') {
+            const amount = action === 'add' ? 2 : -1.5;
+            newData.forEach(d => { d['擾動瞬間'] = d.name === param ? Math.max(0.1, d['原平衡'] + amount) : d['原平衡']; });
+            const isReactant = sys.reactants.includes(param);
+            if (action === 'add') {
+                shift = isReactant ? 1 : -1;
+                exp = `加入 ${param}，濃度瞬間上升，平衡向${isReactant?'右':'左'}移動以消耗多餘的 ${param}。`;
+            } else {
+                shift = isReactant ? -1 : 1;
+                exp = `移除 ${param}，濃度瞬間下降，平衡向${isReactant?'左':'右'}移動以補充 ${param}。`;
+            }
+        }
+
+        newData.forEach(d => {
+            const isReactant = sys.reactants.includes(d.name);
+            const change = isReactant ? -0.8 * shift : 0.8 * shift; 
+            d['新平衡'] = Math.max(0.1, d['擾動瞬間'] + change);
+        });
+
+        lcCurrentData = newData;
+        shiftStr = shift === 1 ? '平衡向右移動 ➡️' : '平衡向左移動 ⬅️';
+        document.getElementById('lcResult').innerText = shiftStr;
+        document.getElementById('lcResult').style.color = shift === 1 ? 'var(--success)' : 'var(--danger)';
+        document.getElementById('lcExplanation').innerText = exp;
+        renderLCChart(lcCurrentData);
+    }
+
+    function renderLCChart(data) {
+        if(!window.Recharts) return;
+        const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } = window.Recharts;
+        const C = () => React.createElement(ResponsiveContainer, {width:"100%", height:"100%"}, 
+            React.createElement(BarChart, {data:data, margin:{top:20,right:30,left:0,bottom:5}}, 
+                React.createElement(CartesianGrid, {strokeDasharray:"3 3", vertical:false, stroke:"var(--border-color)"}), 
+                React.createElement(XAxis, {dataKey:"name", tick:{fill:'var(--text-main)', fontSize:14, fontWeight:'bold'}}), 
+                React.createElement(YAxis, {tick:{fill:'var(--text-muted)'}}), 
+                React.createElement(Tooltip, {contentStyle:{backgroundColor:'var(--bg-panel)', color:'var(--text-main)', borderRadius:'8px'}}), 
+                React.createElement(Legend, {wrapperStyle:{paddingTop:'10px'}}), 
+                React.createElement(Bar, {dataKey:"原平衡", fill:"#bdc3c7", radius:[4,4,0,0]}),
+                React.createElement(Bar, {dataKey:"擾動瞬間", fill:"var(--warning)", radius:[4,4,0,0]}),
+                React.createElement(Bar, {dataKey:"新平衡", fill:"var(--secondary)", radius:[4,4,0,0]})
+            )
+        );
+        ReactDOM.render(React.createElement(C), document.getElementById('lcChartContainer'));
+    }
+
+    function updateLabBoyle() { const v=parseFloat(document.getElementById('sl_boyle_v').value); document.getElementById('val_boyle_v').innerText=v.toFixed(1); document.getElementById('val_boyle_p').innerText=(10/v).toFixed(2); document.getElementById('gas-piston').style.top=`${100-(v*10)}%`; }
+    function updateLabMolarity() { const n=parseFloat(document.getElementById('sl_mol_n').value), v=parseFloat(document.getElementById('sl_mol_v').value), c=n/v; document.getElementById('val_mol_n').innerText=n.toFixed(1); document.getElementById('val_mol_v').innerText=v.toFixed(1); document.getElementById('val_mol_c').innerText=c.toFixed(2); document.getElementById('beaker-liquid').style.height=`${(v/5)*100}%`; document.getElementById('beaker-liquid').style.background=`rgba(52,152,219,${Math.max(0.1,Math.min(1,c/2))})`; }
+    function updateLabPH() { const p=parseFloat(document.getElementById('sl_ph_h').value); document.getElementById('val_ph_h').innerText=p.toFixed(1); document.getElementById('val_ph_res').innerText=p.toFixed(2); document.getElementById('ph-paper').style.background=`hsl(${p*20},80%,50%)`; }
+    function updateLabHeat() { const h=parseFloat(document.getElementById('sl_heat_h').value), dt=h/100; document.getElementById('val_heat_h').innerText=h; document.getElementById('val_heat_t').innerText=(25+dt).toFixed(1); document.getElementById('thermo-mercury').style.height=`${20+(dt/100)*70}%`; }
+    function calcFormula(t) { const r={'molarity':()=>((document.getElementById('f_mol').value/document.getElementById('f_vol').value).toFixed(4)+' M'),'dilution':()=>{const m1=document.getElementById('f_m1').value,v1=document.getElementById('f_v1').value,m2=document.getElementById('f_m2').value,v2=document.getElementById('f_v2').value;return (m1&&v1&&m2&&!v2)?(m1*v1/m2).toFixed(2):(m1&&v1&&!m2&&v2)?(m1*v1/v2).toFixed(2):'-';},'ppm':()=>((document.getElementById('f_mg').value/document.getElementById('f_kg').value).toFixed(2)+' ppm'),'colligative':()=>((document.getElementById('c_k').value*document.getElementById('c_m').value*document.getElementById('c_i').value).toFixed(3)+' °C'),'idealGas':()=>((document.getElementById('g_mol').value*0.082*(parseFloat(document.getElementById('g_temp').value)+273.15)/document.getElementById('g_press').value).toFixed(3)+' L'),'boyle':()=>{const p1=document.getElementById('g_p1').value,v1=document.getElementById('g_v1').value,p2=document.getElementById('g_p2').value,v2=document.getElementById('g_v2').value;return (p1&&v1&&p2&&!v2)?(p1*v1/p2).toFixed(2):(p1&&v1&&!p2&&v2)?(p1*v1/v2).toFixed(2):'-';},'ph':()=>(-Math.log10(document.getElementById('ph_h').value).toFixed(2)),'heat':()=>((document.getElementById('h_m').value*document.getElementById('h_s').value*document.getElementById('h_dt').value).toFixed(2)+' cal'),'kp_kc':()=>(document.getElementById('k_kc').value*Math.pow(0.082*(parseFloat(document.getElementById('k_t').value)+273.15),document.getElementById('k_dn').value)).toFixed(4),'faraday':()=>((document.getElementById('e_i').value*document.getElementById('e_t').value*document.getElementById('e_m').value)/(96500*document.getElementById('e_n').value)).toFixed(4)}; try{document.getElementById('res_'+t).innerText=r[t]();}catch(e){} }
+    function updateQuizCount() { document.getElementById('quizSelectionCount').innerText=`已勾選: ${document.querySelectorAll('.formula-cb:checked').length} 單元`; }
+
+    // 7. 文字解析與 AI 生成
     function processTextForDisplay(rawText, isCloze) {
-        let text = rawText || "";
-        const open = (text.match(/\[ANS\]/g) || []).length, close = (text.match(/\[\/ANS\]/g) || []).length;
+        let text = rawText || ""; const open = (text.match(/\[ANS\]/g) || []).length, close = (text.match(/\[\/ANS\]/g) || []).length;
         if (open > close) text += '[\/ANS]'.repeat(open - close);
-
         if (isCloze) {
             let parts = text.split('$');
             for (let i = 0; i < parts.length; i++) {
                 if (i % 2 === 0) { 
                     parts[i] = parts[i].replace(/\b\d+(\.\d+)?\b/g, '<span class="cloze-blank">____</span>');
-                    ['限量試劑', '理論產率', '氧化還原', '酸鹼中和', '莫耳數', '重量百分率', '理想氣體', '平衡常數', '體積莫耳濃度', '反應熱', '法拉第', '勒沙特列'].forEach(kw => {
-                        parts[i] = parts[i].replace(new RegExp(kw, 'g'), `<span class="cloze-blank">____</span>`);
-                    });
+                    ['限量試劑', '理論產率', '氧化還原', '酸鹼中和', '莫耳數', '重量百分率', '理想氣體', '平衡常數', '體積莫耳濃度', '反應熱', '法拉第', '勒沙特列'].forEach(kw => { parts[i] = parts[i].replace(new RegExp(kw, 'g'), `<span class="cloze-blank">____</span>`); });
                 }
             }
             text = `<div style="text-align:center; margin-bottom: 20px; font-size: 18px; font-weight: bold; border-bottom: 2px solid var(--border-color); padding-bottom: 10px;">班級：_______ 姓名：_______ 座號：____</div>` + parts.join('$');
         }
-        text = text.replace(/\[ANS\]/g, '<div class="answer-block"><strong>💡 解析：</strong><br>');
-        text = text.replace(/\[\/ANS\]/g, '</div>');
-        return text.replace(/\n/g, '<br>');
+        text = text.replace(/\[ANS\]/g, '<div class="answer-block"><strong>💡 解析：</strong><br>'); text = text.replace(/\[\/ANS\]/g, '</div>'); return text.replace(/\n/g, '<br>');
     }
-
     function toggleClozeWorksheet(elementId, baseTitle, btnElement) {
         const src = document.getElementById(elementId); if(!src || !src.hasAttribute('data-raw-text')) return showToast("請先完成運算！");
-        const newState = src.getAttribute('data-cloze-mode') !== 'true';
-        src.setAttribute('data-cloze-mode', newState);
+        const newState = src.getAttribute('data-cloze-mode') !== 'true'; src.setAttribute('data-cloze-mode', newState);
         src.innerHTML = processTextForDisplay(src.getAttribute('data-raw-text'), newState);
         if (window.MathJax) MathJax.typesetPromise([src]).catch(e=>{});
         if (btnElement) btnElement.innerText = newState ? "👁️ 還原算式" : "📝 轉換學習單";
     }
-
     function saveToVaultContext(elementId, baseTitle) {
         const src = document.getElementById(elementId); if(!src || !src.hasAttribute('data-raw-text')) return showToast("無內容！");
         const raw = src.getAttribute('data-raw-text'), isC = src.getAttribute('data-cloze-mode') === 'true';
-        
         let defaultTag = baseTitle.replace('報告', '').replace('分析', '').replace('測驗', '');
         const tagInput = prompt("🏷️ 請為這份考卷輸入標籤 (多個標籤請用半形逗號分隔)：\n例如：段考題, 酸鹼中和", defaultTag);
         if (tagInput === null) return; 
-        
-        let tags = tagInput ? tagInput.split(',').map(t => t.trim()).filter(t => t) : ["未分類"];
-        if (tags.length === 0) tags = ["未分類"];
-
+        let tags = tagInput ? tagInput.split(',').map(t => t.trim()).filter(t => t) : ["未分類"]; if (tags.length === 0) tags = ["未分類"];
         let vault = JSON.parse(localStorage.getItem('quiz_vault') || '[]');
-        vault.unshift({ 
-            id: Date.now().toString(), 
-            date: new Date().toLocaleString(), 
-            title: isC ? `[學習單] ${baseTitle}` : baseTitle, 
-            rawText: raw, 
-            isCloze: isC, 
-            content: src.innerHTML,
-            tags: tags 
-        });
-        
+        vault.unshift({ id: Date.now().toString(), date: new Date().toLocaleString(), title: isC ? `[學習單] ${baseTitle}` : baseTitle, rawText: raw, isCloze: isC, content: src.innerHTML, tags: tags });
         try {
             localStorage.setItem('quiz_vault', JSON.stringify(vault));
             if(elementId === 'quizContent') document.getElementById('quizOverlay').style.display = 'none';
-            showToast("✅ 已加入題庫並自動打標"); 
-            if(document.getElementById('view-vault').classList.contains('active')) loadVault();
-        } catch (e) {
-            alert("⚠️ 系統保護啟動：本機儲存空間已滿 (接近 5MB)！\n\n您的資料未遺失，但無法寫入新考卷。請先至「數位題庫保險箱」匯出 JSON 備份，然後清空舊資料以釋放空間。");
-        }
+            showToast("✅ 已加入題庫並自動打標"); if(document.getElementById('view-vault').classList.contains('active')) loadVault();
+        } catch (e) { alert("⚠️ 系統保護啟動：本機儲存空間已滿 (接近 5MB)！\n\n您的資料未遺失，但無法寫入新考卷。請先匯出備份，然後清空舊資料。"); }
     }
-
     async function callGemini(prompt, resultBoxId, isModal = false, isQuiz = false) {
         const apiKey = localStorage.getItem('gemini_api_key'); if(!apiKey) return openApiModal();
         const btnSave = document.getElementById('saveQuizBtn'), btnCloze = document.getElementById('btnClozeQuiz');
         if(isModal) { document.getElementById('quizModalContainer').classList.remove('hide-answers'); document.getElementById('modalToggleAnsBtn').innerText = '👁️ 隱藏解答'; document.getElementById('quizOverlay').style.display = "flex"; if(btnSave) btnSave.disabled=true; if(btnCloze){btnCloze.style.display="none"; btnCloze.innerText="📝 轉換學習單";} }
-        const resultBox = document.getElementById(resultBoxId); resultBox.innerHTML = '<span style="color:var(--info)">🔄 運算中...</span>';
-        resultBox.removeAttribute('data-raw-text'); resultBox.removeAttribute('data-cloze-mode');
+        const resultBox = document.getElementById(resultBoxId); resultBox.innerHTML = '<span style="color:var(--info)">🔄 運算中...</span>'; resultBox.removeAttribute('data-raw-text'); resultBox.removeAttribute('data-cloze-mode');
         try {
             const modelName = await getBestModel(apiKey);
             const finalPrompt = prompt + (isBilingual?"\n【CLIL雙語模式】中英對照並附Vocabulary Bank。":"\n繁體中文。") + `\n【絕對強制指令】：1. 所有化學符號、方程式(含上下標與離子)必須使用 $ 包夾。2. 所有解析與答案必須用 [ANS] 與 [/ANS] 包夾。`;
@@ -911,8 +998,6 @@
             if(isQuiz) { currentQuizContext.textContent = raw; if(btnSave) btnSave.disabled=false; if(btnCloze) { btnCloze.style.display="inline-flex"; btnCloze.innerText="📝 轉換學習單"; } }
         } catch(e) { resultBox.innerHTML = `<span style="color:var(--danger);">❌ 失敗：${e.message}</span>`; }
     }
-
-    // AI 觸發點
     function generateQuiz() { if(!currentSmilesA) return showToast("搜尋主分子！"); document.getElementById('quizModalTitle').innerText="🤖 AI 隨堂測驗"; callGemini(`出 3 題選擇題，主題「${currentNameA}」。`, 'quizContent', true, true); }
     function generateQuizFromCanvas() { if(!jsmeApplet || !jsmeApplet.smiles()) return showToast("畫布為空！"); document.getElementById('quizModalTitle').innerText="🤖 AI 畫布測驗"; callGemini(`出 3 題選擇題，主題 SMILES「${jsmeApplet.smiles()}」。`, 'quizContent', true, true); }
     function analyzeNews() { const t = document.getElementById('newsInput').value; if(t) callGemini(`時事「${t}」探究：1.背景 2.化學原理 3.兩題討論題(依序排版：題目一、[ANS]解答一[/ANS]、題目二、[ANS]解答二[/ANS])。`, 'newsResult', false, false); }
@@ -927,155 +1012,10 @@
     }
     function generateQuizFromReaction(n, eq, d) { document.getElementById('quizModalTitle').innerText="⚗️ 經典反應測驗"; callGemini(`針對反應：【${n}】 ($ ${eq} $)，設計 3 題選擇題。難度：【${d}】。`, 'quizContent', true, true); }
 
-    // 週期表 & 反應庫 & 收藏
-    function renderPeriodicTable(m='standard') {
-        const g = document.getElementById('ptGrid'); g.innerHTML='';
-        fullPT.forEach(e => {
-            const ex = ptDataExtra[e.z] || {r:null, ie:null};
-            const rVal = ex.r; const ieVal = ex.ie;
-            const d = document.createElement('div'); d.className='element-cell'; d.style.gridColumn=e.g; d.style.gridRow=e.p;
-            
-            if(m==='heatmap' && e.en) { 
-                d.style.backgroundColor=`hsl(${(1-(e.en-0.7)/3.3)*60},100%,65%)`; d.style.color='#000'; 
-            } else if(m==='radius' && rVal) {
-                const hue = ((rVal - 30) / 270) * 120;
-                d.style.backgroundColor=`hsl(${hue},100%,70%)`; d.style.color='#000';
-            } else if(m==='ie' && ieVal) {
-                const hue = 60 + ((ieVal - 350) / 2150) * 220;
-                d.style.backgroundColor=`hsl(${hue},100%,70%)`; d.style.color='#fff';
-            } else if (m !== 'standard') {
-                d.style.backgroundColor='var(--bg-main)'; d.style.color='var(--text-muted)'; d.style.opacity='0.5';
-            }
-
-            d.innerHTML = `<span class="el-num">${e.z}</span><span class="el-sym">${e.s}</span><br><span class="el-name">${e.n}</span>`;
-            d.onclick = () => { 
-                document.getElementById('elDetailCard').style.display='block'; 
-                document.getElementById('elName').innerText=`${e.s} - ${e.n}`; 
-                document.getElementById('elZ').innerText=e.z; 
-                document.getElementById('elGP').innerText=`第${e.g}族/第${e.p}週期`; 
-                document.getElementById('elEn').innerText=e.en||'N/A'; 
-                document.getElementById('elR').innerText=rVal ? rVal + ' pm' : 'N/A';
-                document.getElementById('elIE').innerText=ieVal ? ieVal + ' kJ/mol' : 'N/A';
-            };
-            g.appendChild(d);
-        });
-        const msg = m==='heatmap'?'電負度熱力圖':(m==='radius'?'原子半徑趨勢':(m==='ie'?'游離能趨勢':'標準檢視'));
-        showToast(msg);
-    }
-
-    function renderReactionDB() {
-        const g = document.getElementById('reactionDBGrid'); g.innerHTML='';
-        reactionDB.forEach(r => {
-            const sn = r.name.replace(/'/g,"\\'"), se = r.eq.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-            const c = document.createElement('div'); c.className='card'; c.style.borderLeft='4px solid var(--secondary)';
-            c.innerHTML = `<b>${r.name}</b><div style="margin:5px 0;"><span class="btn-sm" style="background:var(--bg-base);border:1px solid var(--border-color);border-radius:10px;">${r.cat} | ${r.syllabus}</span></div><div style="font-family:monospace; color:var(--danger); background:rgba(231,76,60,0.05); padding:8px; border-radius:4px; margin-bottom:10px; overflow-x:auto;">${r.eq}</div><div style="font-size:13px; margin-bottom:10px;">${r.desc}</div><div style="text-align:right;"><select id="diff-${r.id}" style="padding:4px; font-size:12px; width:120px;"><option value="基礎">基礎</option><option value="進階">進階</option><option value="大考素養">素養</option></select> <button class="btn-outline btn-sm" onclick="generateQuizFromReaction('${sn}','${se}',document.getElementById('diff-${r.id}').value)">🤖 命題</button></div>`;
-            g.appendChild(c);
-        });
-        if(window.MathJax) MathJax.typesetPromise([g]);
-    }
-
-    function renderFavorites() {
-        const c = document.getElementById('favoritesCloud'); if(!c) return;
-        c.innerHTML = favoritesList.length ? favoritesList.map(f => `<span class="chem-tag selected" style="background:rgba(241,196,15,0.2);color:#d35400;border-color:#f1c40f;" onclick="document.getElementById('chemName').value='${f.name}';searchSingle(false);">${f.name} <span onclick="event.stopPropagation();favoritesList=favoritesList.filter(x=>x.cid!=='${f.cid}');localStorage.setItem('chem_favorites',JSON.stringify(favoritesList));renderFavorites();" style="cursor:pointer">❌</span></span>`).join('') : '<span style="font-size:13px; color:var(--text-muted);">無收藏</span>';
-    }
-    function addFavorite(n, c) { if(n&&c&&!favoritesList.find(x=>x.cid===c)) { favoritesList.push({name:n,cid:c}); localStorage.setItem('chem_favorites',JSON.stringify(favoritesList)); renderFavorites(); showToast("已收藏"); } }
-
-    async function smartGetCid(name) {
-        if(/[\u4e00-\u9fa5]/.test(name)) {
-            const en = await fetch(WIKI_API+encodeURIComponent(name)).then(r=>r.json()).then(d=>{const k=Object.keys(d.query.pages)[0]; return k!=="-1"&&d.query.pages[k].langlinks?d.query.pages[k].langlinks[0]['*']:null}).catch(()=>null);
-            if(en) { const cid = await fetch(`${PUBCHEM_API}/compound/name/${encodeURIComponent(en)}/cids/JSON`).then(r=>r.ok?r.json():null).then(d=>d?d.IdentifierList.CID[0]:null).catch(()=>null); if(cid) return {cid, finalName:en}; }
-        }
-        const cid = await fetch(`${PUBCHEM_API}/compound/name/${encodeURIComponent(name)}/cids/JSON`).then(r=>r.ok?r.json():null).then(d=>d?d.IdentifierList.CID[0]:null).catch(()=>null);
-        return cid ? {cid, finalName:name} : null;
-    }
-    
-    async function searchSingle(isC = false) {
-        const n = document.getElementById('chemName').value.trim(), s = document.getElementById('singleStatus'); if(!n) return;
-        if(isC && !currentCidA) isC = false; s.innerHTML='🔄 解析中...'; s.style.color='var(--text-main)';
-        const r = await smartGetCid(n); if(!r) { s.innerHTML='❌ 找不到'; s.style.color='var(--danger)'; return; }
-        const c=r.cid, suf=isC?'B':'A';
-        if(isC) { currentCidB=c; currentNameB=r.finalName; document.getElementById('dashboardAreaCompare').style.display='block'; document.getElementById('titleB').innerText=`${n} (對照)`; } 
-        else { currentCidA=c; currentNameA=r.finalName; document.getElementById('dashboardAreaWrapper').style.display='grid'; document.getElementById('dashboardAreaCompare').style.display='none'; document.getElementById('titleA').innerText=n; }
-        document.getElementById(`chemImage${suf}`).src=`${PUBCHEM_API}/compound/cid/${c}/PNG?record_type=2d&image_size=large`; s.innerHTML='✅ 完成'; s.style.color='var(--success)';
-        
-        // 渲染等待狀態
-        document.getElementById(`ghsContainer${suf}`).innerHTML = `<div class="ghs-container"><span style="color:var(--text-muted); font-size:13px;">🔄 正在向 PubChem 檢索 GHS 危害資訊...</span></div>`;
-
-        Promise.all([
-            load3DAsync(c, `viewer_3D_${suf}`, `viewer3D_single_${suf}`),
-            fetch(`${PUBCHEM_API}/compound/cid/${c}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,IUPACName,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,Complexity/JSON`).then(x=>x.json()),
-            fetchGHSFromPubChem(c)
-        ]).then(results => {
-            const d = results[1];
-            const ghsCodes = results[2];
-
-            if(!d.PropertyTable) return; const p=d.PropertyTable.Properties[0];
-            document.getElementById(`td_iupac${suf}`).innerText=p.IUPACName||"無"; document.getElementById(`td_formula${suf}`).innerText=p.MolecularFormula||"無"; document.getElementById(`td_weight${suf}`).innerText=p.MolecularWeight?p.MolecularWeight+" g/mol":"無";
-            if(isC) currentSmilesB=p.CanonicalSMILES||""; else currentSmilesA=p.CanonicalSMILES||"";
-            
-            // 動態渲染 GHS
-            let ghsHtml = '<h4 style="margin: 0 0 10px 0; color: var(--danger); width:100%;">⚠️ GHS 危害標示 (PubChem 即時連線)</h4><div style="display:flex; flex-wrap:wrap; gap:8px;">';
-            if (ghsCodes.length > 0) {
-                ghsCodes.forEach(code => {
-                    const name = pubchemGhsNames[code] || code;
-                    const iconUrl = `https://pubchem.ncbi.nlm.nih.gov/images/ghs/${code}.svg`;
-                    ghsHtml += `<div class="ghs-badge"><img src="${iconUrl}" class="ghs-icon" alt="${name}"><span>${name}</span></div>`;
-                });
-            } else {
-                ghsHtml += `<span style="color:var(--text-muted); font-size:13px;">PubChem 暫無收錄該物質之 GHS 資訊 (或屬無危害物質)</span>`;
-            }
-            ghsHtml += '</div>';
-            document.getElementById(`ghsContainer${suf}`).innerHTML = `<div class="ghs-container">${ghsHtml}</div>`;
-
-            if(window.Recharts) {
-                const { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } = window.Recharts;
-                const data = [{s:'質量',A:Math.min(100,(p.MolecularWeight/500)*100)||0,r:p.MolecularWeight},{s:'H給',A:Math.min(100,(p.HBondDonorCount/10)*100)||0,r:p.HBondDonorCount},{s:'H受',A:Math.min(100,(p.HBondAcceptorCount/10)*100)||0,r:p.HBondAcceptorCount},{s:'旋轉鍵',A:Math.min(100,(p.RotatableBondCount/10)*100)||0,r:p.RotatableBondCount},{s:'複雜度',A:Math.min(100,(p.Complexity/500)*100)||0,r:p.Complexity}];
-                const col=suf==='A'?"#3498db":"#d81b60"; const TT=({active,payload})=>{if(active&&payload&&payload.length) return React.createElement('div',{style:{background:'#fff',padding:'5px',border:'1px solid #ccc'}},React.createElement('p',null,`${payload[0].payload.s}: ${payload[0].payload.r||0}`));return null;};
-                ReactDOM.render(React.createElement(ResponsiveContainer,{width:"100%",height:"100%"},React.createElement(RadarChart,{cx:"50%",cy:"50%",outerRadius:"70%",data},React.createElement(PolarGrid),React.createElement(PolarAngleAxis,{dataKey:"s",tick:{fontSize:11}}),React.createElement(PolarRadiusAxis,{angle:30,domain:[0,100],tick:false,axisLine:false}),React.createElement(Radar,{dataKey:"A",stroke:col,fill:col,fillOpacity:0.5}),React.createElement(Tooltip,{content:React.createElement(TT)}))), document.getElementById(`radarChart${suf}`));
-            }
-        }).catch(e=>{});
-    }
-    function clearSingle() { document.getElementById('chemName').value=""; document.getElementById('singleStatus').innerHTML=""; document.getElementById('dashboardAreaWrapper').style.display="none"; currentCidA=currentCidB=null; }
-    async function load3DAsync(cid, elId, ref) { const div=document.getElementById(elId); if(!window[ref]) window[ref]=$3Dmol.createViewer(div,{backgroundColor:'transparent'}); const v=window[ref]; v.clear(); const res=await fetch(`${PUBCHEM_API}/compound/cid/${cid}/record/SDF/?record_type=3d`); if(res.ok){v.addModel(await res.text(),"sdf"); v.setStyle({},{stick:{radius:0.15},sphere:{scale:0.3}}); v.zoomTo(); v.render(); setTimeout(()=>{v.resize();v.zoomTo();v.render();},150);} }
-
-    // 畫布
-    function toggleHydrogens() { isAutoH=!isAutoH; const b=document.getElementById('btnToggleH'); if(isAutoH){jsmeApplet.options("hydrogens");jsmeReadonlyApplet.options("hydrogens");b.innerText="H 氫原子：自動 (標準)";b.style.background="var(--success)";}else{jsmeApplet.options("nohydrogens");jsmeReadonlyApplet.options("nohydrogens");b.innerText="H 氫原子：手動 (教學)";b.style.background="var(--warning)";} const m=jsmeApplet.molFile(); if(m){jsmeApplet.readMolFile(m);jsmeReadonlyApplet.readMolFile(m);} }
-    function injectSmilesToCanvas() { const s=document.getElementById('externalSmiles').value.trim(); if(s && jsmeApplet) jsmeApplet.readGenericMolecularInput(s); }
-    function clearCanvas() { if (jsmeApplet) { jsmeApplet.reset(); if (jsmeReadonlyApplet) jsmeReadonlyApplet.reset(); document.getElementById('drawDashboardArea').style.opacity="0.4"; document.getElementById('drawDashboardArea').style.pointerEvents="none"; document.getElementById('syncStatus').className="sync-indicator"; document.getElementById('syncStatus').innerText="⚫ 準備就緒"; } }
-    function onCanvasModified() { document.getElementById('syncStatus').className="sync-indicator sync-active"; document.getElementById('syncStatus').innerText="✏️ 同步中..."; const m=jsmeApplet.molFile(); if(m && jsmeReadonlyApplet) jsmeReadonlyApplet.readMolFile(m); clearTimeout(drawDebounceTimer); drawDebounceTimer=setTimeout(analyzeCanvasRealTime,1200); }
-    async function analyzeCanvasRealTime() { const sm=jsmeApplet.smiles(); if(!sm) return; try{const r=await fetch(`${PUBCHEM_API}/compound/smiles/${encodeURIComponent(sm)}/cids/JSON`);const cid=(await r.json()).IdentifierList.CID[0];document.getElementById('drawDashboardArea').style.opacity="1";document.getElementById('drawDashboardArea').style.pointerEvents="auto";document.getElementById('drawChemImage').src=`${PUBCHEM_API}/compound/cid/${cid}/PNG?record_type=2d&image_size=large`;load3DAsync(cid,'drawViewer_3D','viewer3D_draw');document.getElementById('syncStatus').className="sync-indicator sync-success";document.getElementById('syncStatus').innerText="✅ 同步完成";}catch(e){document.getElementById('syncStatus').innerText="❌ 查無分子";document.getElementById('syncStatus').style.background="var(--danger)";document.getElementById('syncStatus').style.color="#fff";} }
-    function downloadMOL() { if(jsmeApplet) { const m=jsmeApplet.molFile(); if(!m)return showToast("畫布空"); saveAs(new Blob([m],{type:"text/plain"}),`mol_${Date.now()}.mol`); showToast("MOL下載"); } }
-    async function handleAIVisionUpload(e) { const f=e.target.files[0]; if(!f) return; e.target.value=''; const k=localStorage.getItem('gemini_api_key'); if(!k)return openApiModal(); document.getElementById('syncStatus').innerText="✨ 辨識中..."; try{const b=await new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.readAsDataURL(f);});const m=await getBestModel(k);const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${k}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:"辨識圖中SMILES，失敗回ERROR"},{inline_data:{mime_type:f.type,data:b.split(',')[1]}}]}]})});if(!res.ok)throw new Error();const t=(await res.json()).candidates[0].content.parts[0].text.trim().replace(/```/g,'');if(t==="ERROR"||!t)throw new Error();document.getElementById('externalSmiles').value=t;jsmeApplet.readGenericMolecularInput(t);}catch(err){showToast("辨識失敗");} }
-
-    // 實驗室 & 公式計算
-    function updateTitrationSim() { const vA=parseFloat(document.getElementById('titrationSlider').value), ind=document.getElementById('indicatorSelect').value, vB=25, cB=0.1, cA=0.1, mO=vB*cB, mH=vA*cA, tv=vB+vA; let ph=mH<mO?14+Math.log10((mO-mH)/tv):(mH===mO?7:-Math.log10((mH-mO)/tv)); ph=Math.max(1,Math.min(14,ph)); document.getElementById('titrationPHVal').innerText=ph.toFixed(2); document.getElementById('titrationVolVal').innerText=vA.toFixed(1); const lq=document.getElementById('flaskLiquidSim'); lq.style.height=`${40+(vA/50)*50}%`; if(ind==='phenolphthalein') lq.style.backgroundColor=ph>=10?'rgba(255,20,147,0.7)':(ph>8.2?`rgba(255,20,147,${0.1+((ph-8.2)/1.8)*0.6})`:'rgba(255,255,255,0.2)'); else lq.style.backgroundColor=ph<=4.4?'rgba(231,76,60,0.7)':(ph>=6.2?'rgba(241,196,15,0.7)':`rgba(${231+(ph-4.4)/1.8*10},${76+(ph-4.4)/1.8*120},${60-(ph-4.4)/1.8*45},0.7)`); titrationData=[]; for(let v=0;v<=50;v+=0.5){let p, hh=v*cA;if(hh<mO) p=14+Math.log10((mO-hh)/(vB+v));else if(hh===mO) p=7;else p=-Math.log10((hh-mO)/(vB+v)); titrationData.push({vol:v,pH:Math.max(1,Math.min(14,p))});} if(window.Recharts){const {LineChart,Line,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer,ReferenceDot}=window.Recharts;const C=()=>React.createElement(ResponsiveContainer,{width:"100%",height:"100%"},React.createElement(LineChart,{data:titrationData,margin:{top:10,right:10,left:-20,bottom:0}},React.createElement(CartesianGrid,{strokeDasharray:"3 3",stroke:"var(--border-color)"}),React.createElement(XAxis,{dataKey:"vol",type:"number",domain:[0,50],tick:{fill:'var(--text-muted)'}}),React.createElement(YAxis,{domain:[0,14],tick:{fill:'var(--text-muted)'}}),React.createElement(Tooltip,{contentStyle:{backgroundColor:'var(--bg-panel)',color:'var(--text-main)'}}),React.createElement(Line,{type:"monotone",dataKey:"pH",stroke:"var(--rose)",strokeWidth:3,dot:false}),React.createElement(ReferenceDot,{x:vA,y:ph,r:6,fill:"var(--primary)",stroke:"none"})));ReactDOM.render(React.createElement(C),document.getElementById('titrationChartContainer'));} }
-    function updateLabBoyle() { const v=parseFloat(document.getElementById('sl_boyle_v').value); document.getElementById('val_boyle_v').innerText=v.toFixed(1); document.getElementById('val_boyle_p').innerText=(10/v).toFixed(2); document.getElementById('gas-piston').style.top=`${100-(v*10)}%`; }
-    function updateLabMolarity() { const n=parseFloat(document.getElementById('sl_mol_n').value), v=parseFloat(document.getElementById('sl_mol_v').value), c=n/v; document.getElementById('val_mol_n').innerText=n.toFixed(1); document.getElementById('val_mol_v').innerText=v.toFixed(1); document.getElementById('val_mol_c').innerText=c.toFixed(2); document.getElementById('beaker-liquid').style.height=`${(v/5)*100}%`; document.getElementById('beaker-liquid').style.background=`rgba(52,152,219,${Math.max(0.1,Math.min(1,c/2))})`; }
-    function updateLabPH() { const p=parseFloat(document.getElementById('sl_ph_h').value); document.getElementById('val_ph_h').innerText=p.toFixed(1); document.getElementById('val_ph_res').innerText=p.toFixed(2); document.getElementById('ph-paper').style.background=`hsl(${p*20},80%,50%)`; }
-    function updateLabHeat() { const h=parseFloat(document.getElementById('sl_heat_h').value), dt=h/100; document.getElementById('val_heat_h').innerText=h; document.getElementById('val_heat_t').innerText=(25+dt).toFixed(1); document.getElementById('thermo-mercury').style.height=`${20+(dt/100)*70}%`; }
-    function calcFormula(t) { const r={'molarity':()=>((document.getElementById('f_mol').value/document.getElementById('f_vol').value).toFixed(4)+' M'),'dilution':()=>{const m1=document.getElementById('f_m1').value,v1=document.getElementById('f_v1').value,m2=document.getElementById('f_m2').value,v2=document.getElementById('f_v2').value;return (m1&&v1&&m2&&!v2)?(m1*v1/m2).toFixed(2):(m1&&v1&&!m2&&v2)?(m1*v1/v2).toFixed(2):'-';},'ppm':()=>((document.getElementById('f_mg').value/document.getElementById('f_kg').value).toFixed(2)+' ppm'),'colligative':()=>((document.getElementById('c_k').value*document.getElementById('c_m').value*document.getElementById('c_i').value).toFixed(3)+' °C'),'idealGas':()=>((document.getElementById('g_mol').value*0.082*(parseFloat(document.getElementById('g_temp').value)+273.15)/document.getElementById('g_press').value).toFixed(3)+' L'),'boyle':()=>{const p1=document.getElementById('g_p1').value,v1=document.getElementById('g_v1').value,p2=document.getElementById('g_p2').value,v2=document.getElementById('g_v2').value;return (p1&&v1&&p2&&!v2)?(p1*v1/p2).toFixed(2):(p1&&v1&&!p2&&v2)?(p1*v1/v2).toFixed(2):'-';},'ph':()=>(-Math.log10(document.getElementById('ph_h').value).toFixed(2)),'heat':()=>((document.getElementById('h_m').value*document.getElementById('h_s').value*document.getElementById('h_dt').value).toFixed(2)+' cal'),'kp_kc':()=>(document.getElementById('k_kc').value*Math.pow(0.082*(parseFloat(document.getElementById('k_t').value)+273.15),document.getElementById('k_dn').value)).toFixed(4),'faraday':()=>((document.getElementById('e_i').value*document.getElementById('e_t').value*document.getElementById('e_m').value)/(96500*document.getElementById('e_n').value)).toFixed(4)}; try{document.getElementById('res_'+t).innerText=r[t]();}catch(e){} }
-    function updateQuizCount() { document.getElementById('quizSelectionCount').innerText=`已勾選: ${document.querySelectorAll('.formula-cb:checked').length} 單元`; }
-
-    // 批量下載
-    function initBatchTags() { const c=document.getElementById('commonChemTags'); if(c) c.innerHTML = commonChemicals.map(t => `<span class="chem-tag" onclick="toggleBatchChem('${t}', this)" id="tag-${t}">${t}</span>`).join(''); }
-    function toggleBatchChem(t, el) { if(selectedBatchChems.has(t)) { selectedBatchChems.delete(t); el.classList.remove('selected'); } else { selectedBatchChems.add(t); el.classList.add('selected'); } updateBatchCart(); }
-    function updateBatchCart() { const cart = document.getElementById('downloadCart'); if(cart) cart.innerHTML = selectedBatchChems.size ? Array.from(selectedBatchChems).map(t => `<span class="chem-tag selected">${t} <span onclick="event.stopPropagation();selectedBatchChems.delete('${t}');updateBatchCart();document.getElementById('tag-${t}')?.classList.remove('selected');" style="cursor:pointer;margin-left:5px;">❌</span></span>`).join('') : '<span style="color:var(--text-muted);font-size:14px;margin:auto;">清單目前為空</span>'; }
-    function clearBatchCart() { selectedBatchChems.clear(); document.querySelectorAll('.chem-tag').forEach(el=>el.classList.remove('selected')); updateBatchCart(); showToast("已清空"); }
-    function addCustomChem() { const v=document.getElementById('customChemInput').value.trim(); if(v){selectedBatchChems.add(v);updateBatchCart();document.getElementById('customChemInput').value='';} }
-    async function startBatchDownload() {
-        if(!selectedBatchChems.size) return showToast("清單空！");
-        const st=document.getElementById('batchStatus'), btn=document.getElementById('batchBtn'); st.style.display='block'; st.innerHTML=`🚀 下載中...<br>`; btn.disabled=true;
-        const zip=new JSZip(), imgF=zip.folder("圖檔"); let sc=0, ps=Array.from(selectedBatchChems).map(async(n)=>{const r=await smartGetCid(n);if(r&&r.cid){try{const res=await fetch(`${PUBCHEM_API}/compound/cid/${r.cid}/PNG?record_type=2d&image_size=large`);if(res.ok){imgF.file(`${n}.png`,await res.blob());return {n,s:true};}}catch(e){}}return {n,s:false};});
-        const rs=await Promise.all(ps); rs.forEach(r=>{if(r.s){st.innerHTML+=`[完成] ${r.n}<br>`;sc++;}else st.innerHTML+=`[失敗] ${r.n}<br>`;});
-        st.innerHTML+=`<br><b>🎉 打包 ${sc} 個圖。</b>`; if(sc>0) zip.generateAsync({type:"blob"}).then(c=>{saveAs(c,"化學圖庫.zip");btn.disabled=false;}); else btn.disabled=false;
-    }
-
-    // 題庫管理
-    let activeVaultTag = null;
+    // 8. 題庫管理
     function filterVaultByTag(tag) { activeVaultTag = (activeVaultTag === tag) ? null : tag; loadVault(); }
     function updateVaultCapacity() {
-        let lsTotal = 0;
-        for (let x in localStorage) { if (localStorage.hasOwnProperty(x)) { lsTotal += ((localStorage[x].length + x.length) * 2); } }
+        let lsTotal = 0; for (let x in localStorage) { if (localStorage.hasOwnProperty(x)) { lsTotal += ((localStorage[x].length + x.length) * 2); } }
         const mb = (lsTotal / 1048576).toFixed(2); const pct = Math.min((mb / 5.0) * 100, 100);
         const capBar = document.getElementById('vaultCapacityBar'); const capText = document.getElementById('vaultCapacityText');
         if (capBar) { capBar.style.width = pct + '%'; capBar.style.background = pct > 90 ? 'var(--danger)' : (pct > 70 ? 'var(--warning)' : 'var(--success)'); }
@@ -1109,10 +1049,161 @@
     function exportQuizWord(id) { const q = JSON.parse(localStorage.getItem('quiz_vault')||'[]').find(x=>x.id===id); if(!q)return; saveAs(new Blob(['\ufeff', `<html xmlns:w='urn:schemas-microsoft-com:office:word'><meta charset='utf-8'><style>body{font-family:sans-serif;} .cloze-blank{color:transparent;border-bottom:1px solid #000;min-width:40px;display:inline-block;}</style><body><h2>${q.title}</h2>${q.rawText?processTextForDisplay(q.rawText,q.isCloze):q.content}</body></html>`], {type:'application/msword'}), `${q.title}.doc`); }
     function deleteQuiz(id) { if(confirm("刪除？")) { localStorage.setItem('quiz_vault', JSON.stringify(JSON.parse(localStorage.getItem('quiz_vault')||'[]').filter(x=>x.id!==id))); loadVault(); showToast("已刪除"); } }
     function clearVault() { if(confirm("清空？")) { localStorage.removeItem('quiz_vault'); loadVault(); showToast("已清空"); } }
-    function exportBackupJSON() { saveAs(new Blob([JSON.stringify({version:"V4.30", quiz_vault:JSON.parse(localStorage.getItem('quiz_vault')||'[]')},null,2)], {type:"application/json"}), "Backup.json"); }
+    function exportBackupJSON() { saveAs(new Blob([JSON.stringify({version:"V4.38", quiz_vault:JSON.parse(localStorage.getItem('quiz_vault')||'[]')},null,2)], {type:"application/json"}), "Backup.json"); }
     function importBackupJSON(e) { const f=e.target.files[0]; if(!f)return; const r=new FileReader(); r.onload=x=>{try{const d=JSON.parse(x.target.result); if(d.quiz_vault){localStorage.setItem('quiz_vault',JSON.stringify(d.quiz_vault)); loadVault(); showToast("匯入成功");}}catch(err){alert("失敗");}}; r.readAsText(f); }
+
+    // 9. 批量下載與 UI 工具
+    function initBatchTags() { const c=document.getElementById('commonChemTags'); if(c) c.innerHTML = commonChemicals.map(t => `<span class="chem-tag" onclick="toggleBatchChem('${t}', this)" id="tag-${t}">${t}</span>`).join(''); }
+    function toggleBatchChem(t, el) { if(selectedBatchChems.has(t)) { selectedBatchChems.delete(t); el.classList.remove('selected'); } else { selectedBatchChems.add(t); el.classList.add('selected'); } updateBatchCart(); }
+    function updateBatchCart() { const cart = document.getElementById('downloadCart'); if(cart) cart.innerHTML = selectedBatchChems.size ? Array.from(selectedBatchChems).map(t => `<span class="chem-tag selected">${t} <span onclick="event.stopPropagation();selectedBatchChems.delete('${t}');updateBatchCart();document.getElementById('tag-${t}')?.classList.remove('selected');" style="cursor:pointer;margin-left:5px;">❌</span></span>`).join('') : '<span style="color:var(--text-muted);font-size:14px;margin:auto;">清單目前為空</span>'; }
+    function clearBatchCart() { selectedBatchChems.clear(); document.querySelectorAll('.chem-tag').forEach(el=>el.classList.remove('selected')); updateBatchCart(); showToast("已清空"); }
+    function addCustomChem() { const v=document.getElementById('customChemInput').value.trim(); if(v){selectedBatchChems.add(v);updateBatchCart();document.getElementById('customChemInput').value='';} }
+    async function startBatchDownload() {
+        if(!selectedBatchChems.size) return showToast("清單空！");
+        const st=document.getElementById('batchStatus'), btn=document.getElementById('batchBtn'); st.style.display='block'; st.innerHTML=`🚀 下載中...<br>`; btn.disabled=true;
+        const zip=new JSZip(), imgF=zip.folder("圖檔"); let sc=0, ps=Array.from(selectedBatchChems).map(async(n)=>{const r=await smartGetCid(n);if(r&&r.cid){try{const res=await fetch(`${PUBCHEM_API}/compound/cid/${r.cid}/PNG?record_type=2d&image_size=large`);if(res.ok){imgF.file(`${n}.png`,await res.blob());return {n,s:true};}}catch(e){}}return {n,s:false};});
+        const rs=await Promise.all(ps); rs.forEach(r=>{if(r.s){st.innerHTML+=`[完成] ${r.n}<br>`;sc++;}else st.innerHTML+=`[失敗] ${r.n}<br>`;});
+        st.innerHTML+=`<br><b>🎉 打包 ${sc} 個圖。</b>`; if(sc>0) zip.generateAsync({type:"blob"}).then(c=>{saveAs(c,"化學圖庫.zip");btn.disabled=false;}); else btn.disabled=false;
+    }
     function downloadImage(id, n) { const a=document.createElement('a'); a.download=`${n}.png`; a.href=document.getElementById(id).src; a.click(); }
     function copyText(id) { navigator.clipboard.writeText(document.getElementById(id).innerText).then(()=>showToast("複製！")); }
+
+    // 10. 畫布控制與官能基
+    function loadTemplate(smiles) {
+        if(jsmeApplet) {
+            document.getElementById('externalSmiles').value = smiles;
+            jsmeApplet.readGenericMolecularInput(smiles);
+            showToast("✅ 已插入骨架/官能基");
+        } else {
+            showToast("❌ 畫布尚未載入，請稍後");
+        }
+    }
+    function toggleHydrogens() { 
+        if(!jsmeApplet) return showToast("❌ 畫布尚未載入");
+        isAutoH=!isAutoH; const b=document.getElementById('btnToggleH'); 
+        if(isAutoH){jsmeApplet.options("hydrogens"); if(jsmeReadonlyApplet) jsmeReadonlyApplet.options("hydrogens"); b.innerText="H 氫原子：自動 (標準)"; b.style.background="var(--success)";}
+        else{jsmeApplet.options("nohydrogens"); if(jsmeReadonlyApplet) jsmeReadonlyApplet.options("nohydrogens"); b.innerText="H 氫原子：手動 (教學)"; b.style.background="var(--warning)";} 
+        const m=jsmeApplet.molFile(); if(m){jsmeApplet.readMolFile(m); if(jsmeReadonlyApplet) jsmeReadonlyApplet.readMolFile(m);} 
+    }
+    function injectSmilesToCanvas() { const s=document.getElementById('externalSmiles').value.trim(); if(s && jsmeApplet) { jsmeApplet.readGenericMolecularInput(s); showToast("✅ 骨架匯入完成"); } else if (!jsmeApplet) { showToast("❌ 畫布尚未載入"); } }
+    function clearCanvas() { if (jsmeApplet) { jsmeApplet.reset(); if (jsmeReadonlyApplet) jsmeReadonlyApplet.reset(); document.getElementById('drawDashboardArea').style.opacity="0.4"; document.getElementById('drawDashboardArea').style.pointerEvents="none"; document.getElementById('syncStatus').className="sync-indicator"; document.getElementById('syncStatus').innerText="⚫ 準備就緒"; } else { showToast("❌ 畫布尚未載入"); } }
+    function onCanvasModified() { document.getElementById('syncStatus').className="sync-indicator sync-active"; document.getElementById('syncStatus').innerText="✏️ 同步中..."; const m=jsmeApplet.molFile(); if(m && jsmeReadonlyApplet) jsmeReadonlyApplet.readMolFile(m); clearTimeout(drawDebounceTimer); drawDebounceTimer=setTimeout(analyzeCanvasRealTime,1200); }
+    async function analyzeCanvasRealTime() { const sm=jsmeApplet.smiles(); if(!sm) return; try{const r=await fetch(`${PUBCHEM_API}/compound/smiles/${encodeURIComponent(sm)}/cids/JSON`);const cid=(await r.json()).IdentifierList.CID[0];document.getElementById('drawDashboardArea').style.opacity="1";document.getElementById('drawDashboardArea').style.pointerEvents="auto";document.getElementById('drawChemImage').src=`${PUBCHEM_API}/compound/cid/${cid}/PNG?record_type=2d&image_size=large`;load3DAsync(cid,'drawViewer_3D','viewer3D_draw');document.getElementById('syncStatus').className="sync-indicator sync-success";document.getElementById('syncStatus').innerText="✅ 同步完成";}catch(e){document.getElementById('syncStatus').innerText="❌ 查無分子";document.getElementById('syncStatus').style.background="var(--danger)";document.getElementById('syncStatus').style.color="#fff";} }
+    async function handleAIVisionUpload(e) { const f=e.target.files[0]; if(!f) return; e.target.value=''; const k=localStorage.getItem('gemini_api_key'); if(!k)return openApiModal(); document.getElementById('syncStatus').innerText="✨ 辨識中..."; try{const b=await new Promise(r=>{const rd=new FileReader();rd.onload=()=>r(rd.result);rd.readAsDataURL(f);});const m=await getBestModel(k);const res=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${m}:generateContent?key=${k}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({contents:[{parts:[{text:"辨識圖中SMILES，失敗回ERROR"},{inline_data:{mime_type:f.type,data:b.split(',')[1]}}]}]})});if(!res.ok)throw new Error();const t=(await res.json()).candidates[0].content.parts[0].text.trim().replace(/```/g,'');if(t==="ERROR"||!t)throw new Error();document.getElementById('externalSmiles').value=t; if(jsmeApplet) jsmeApplet.readGenericMolecularInput(t);}catch(err){showToast("辨識失敗");} }
+
+    // V4.38 探索按鈕連動 (定義為全域函式)
+    window.exploreElement = function(nameStr) {
+        document.getElementById('chemName').value = nameStr;
+        switchView('view-single');
+        searchSingle(false);
+    };
+
+    // 11. 週期表渲染 (V4.38 深度擴充)
+    function renderPeriodicTable(m='standard') {
+        const g = document.getElementById('ptGrid'); g.innerHTML='';
+        fullPT.forEach(e => {
+            const ex = ptDataExtra[e.z] || {r:null, ie:null};
+            const rVal = ex.r; const ieVal = ex.ie;
+            const d = document.createElement('div'); d.className='element-cell'; d.style.gridColumn=e.g; d.style.gridRow=e.p;
+            
+            if(m==='heatmap' && e.en) { d.style.backgroundColor=`hsl(${(1-(e.en-0.7)/3.3)*60},100%,65%)`; d.style.color='#000'; } 
+            else if(m==='radius' && rVal) { const hue = ((rVal - 30) / 270) * 120; d.style.backgroundColor=`hsl(${hue},100%,70%)`; d.style.color='#000'; } 
+            else if(m==='ie' && ieVal) { const hue = 60 + ((ieVal - 350) / 2150) * 220; d.style.backgroundColor=`hsl(${hue},100%,70%)`; d.style.color='#fff'; } 
+            else if (m !== 'standard') { d.style.backgroundColor='var(--bg-main)'; d.style.color='var(--text-muted)'; d.style.opacity='0.5'; }
+
+            d.innerHTML = `<span class="el-num">${e.z}</span><span class="el-sym">${e.s}</span><br><span class="el-name">${e.n}</span>`;
+            d.onclick = () => { 
+                const det = ptDetails[e.z] || {ec:'(暫無資料)', cpd:'(暫無資料)'};
+                document.getElementById('elDetailCard').style.display='block'; 
+                document.getElementById('elName').innerText=`${e.s} - ${e.n}`; 
+                document.getElementById('elConfig').innerText= `電子組態: ${det.ec}`;
+                document.getElementById('elZ').innerText=e.z; 
+                document.getElementById('elGP').innerText=`第${e.g}族/第${e.p}週期`; 
+                document.getElementById('elCpds').innerText=det.cpd; 
+                document.getElementById('elEn').innerText=e.en||'N/A'; 
+                document.getElementById('elR').innerText=rVal ? rVal + ' pm' : 'N/A'; 
+                document.getElementById('elIE').innerText=ieVal ? ieVal + ' kJ/mol' : 'N/A'; 
+                document.getElementById('btnExploreElement').onclick = () => window.exploreElement(e.n);
+            };
+            g.appendChild(d);
+        });
+        const msg = m==='heatmap'?'電負度熱力圖':(m==='radius'?'原子半徑趨勢':(m==='ie'?'游離能趨勢':'標準檢視')); showToast(msg);
+    }
+
+    // 12. 反應庫渲染
+    function renderReactionDB() {
+        const g = document.getElementById('reactionDBGrid'); g.innerHTML='';
+        reactionDB.forEach(r => {
+            const sn = r.name.replace(/'/g,"\\'"), se = r.eq.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+            const c = document.createElement('div'); c.className='card'; c.style.borderLeft='4px solid var(--secondary)';
+            c.innerHTML = `<b>${r.name}</b><div style="margin:5px 0;"><span class="btn-sm" style="background:var(--bg-base);border:1px solid var(--border-color);border-radius:10px;">${r.cat} | ${r.syllabus}</span></div><div style="font-family:monospace; color:var(--danger); background:rgba(231,76,60,0.05); padding:8px; border-radius:4px; margin-bottom:10px; overflow-x:auto;">${r.eq}</div><div style="font-size:13px; margin-bottom:10px;">${r.desc}</div><div style="text-align:right;"><select id="diff-${r.id}" style="padding:4px; font-size:12px; width:120px;"><option value="基礎">基礎</option><option value="進階">進階</option><option value="大考素養">素養</option></select> <button class="btn-outline btn-sm" onclick="generateQuizFromReaction('${sn}','${se}',document.getElementById('diff-${r.id}').value)">🤖 命題</button></div>`;
+            g.appendChild(c);
+        });
+        if(window.MathJax) MathJax.typesetPromise([g]);
+    }
+    function renderFavorites() {
+        const c = document.getElementById('favoritesCloud'); if(!c) return;
+        c.innerHTML = favoritesList.length ? favoritesList.map(f => `<span class="chem-tag selected" style="background:rgba(241,196,15,0.2);color:#d35400;border-color:#f1c40f;" onclick="document.getElementById('chemName').value='${f.name}';searchSingle(false);">${f.name} <span onclick="event.stopPropagation();favoritesList=favoritesList.filter(x=>x.cid!=='${f.cid}');localStorage.setItem('chem_favorites',JSON.stringify(favoritesList));renderFavorites();" style="cursor:pointer">❌</span></span>`).join('') : '<span style="font-size:13px; color:var(--text-muted);">無收藏</span>';
+    }
+    function addFavorite(n, c) { if(n&&c&&!favoritesList.find(x=>x.cid===c)) { favoritesList.push({name:n,cid:c}); localStorage.setItem('chem_favorites',JSON.stringify(favoritesList)); renderFavorites(); showToast("已收藏"); } }
+
+    // 13. PubChem API 連線與 GHS
+    async function fetchGHSFromPubChem(cid) {
+        try {
+            let res = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/${cid}/JSON?heading=GHS+Classification`);
+            if (!res.ok) res = await fetch(`https://pubchem.ncbi.nlm.nih.gov/rest/pug_view/data/compound/${cid}/JSON?heading=Safety+and+Hazards`);
+            if (!res.ok) return [];
+            const textData = await res.text(); const matches = textData.match(/GHS0[1-9]/g);
+            if (matches) return Array.from(new Set(matches)).sort();
+            return [];
+        } catch (e) { return []; }
+    }
+    async function smartGetCid(name) {
+        if(/[\u4e00-\u9fa5]/.test(name)) {
+            const en = await fetch(WIKI_API+encodeURIComponent(name)).then(r=>r.json()).then(d=>{const k=Object.keys(d.query.pages)[0]; return k!=="-1"&&d.query.pages[k].langlinks?d.query.pages[k].langlinks[0]['*']:null}).catch(()=>null);
+            if(en) { const cid = await fetch(`${PUBCHEM_API}/compound/name/${encodeURIComponent(en)}/cids/JSON`).then(r=>r.ok?r.json():null).then(d=>d?d.IdentifierList.CID[0]:null).catch(()=>null); if(cid) return {cid, finalName:en}; }
+        }
+        const cid = await fetch(`${PUBCHEM_API}/compound/name/${encodeURIComponent(name)}/cids/JSON`).then(r=>r.ok?r.json():null).then(d=>d?d.IdentifierList.CID[0]:null).catch(()=>null);
+        return cid ? {cid, finalName:name} : null;
+    }
+    async function searchSingle(isC = false) {
+        const n = document.getElementById('chemName').value.trim(), s = document.getElementById('singleStatus'); if(!n) return;
+        if(isC && !currentCidA) isC = false; s.innerHTML='🔄 解析中...'; s.style.color='var(--text-main)';
+        const r = await smartGetCid(n); if(!r) { s.innerHTML='❌ 找不到'; s.style.color='var(--danger)'; return; }
+        const c=r.cid, suf=isC?'B':'A';
+        if(isC) { currentCidB=c; currentNameB=r.finalName; document.getElementById('dashboardAreaCompare').style.display='block'; document.getElementById('titleB').innerText=`${n} (對照)`; } 
+        else { currentCidA=c; currentNameA=r.finalName; document.getElementById('dashboardAreaWrapper').style.display='grid'; document.getElementById('dashboardAreaCompare').style.display='none'; document.getElementById('titleA').innerText=n; }
+        document.getElementById(`chemImage${suf}`).src=`${PUBCHEM_API}/compound/cid/${c}/PNG?record_type=2d&image_size=large`; s.innerHTML='✅ 完成'; s.style.color='var(--success)';
+        document.getElementById(`ghsContainer${suf}`).innerHTML = `<div class="ghs-container"><span style="color:var(--text-muted); font-size:13px;">🔄 正在向 PubChem 檢索 GHS 危害資訊...</span></div>`;
+
+        Promise.all([
+            load3DAsync(c, `viewer_3D_${suf}`, `viewer3D_single_${suf}`),
+            fetch(`${PUBCHEM_API}/compound/cid/${c}/property/MolecularFormula,MolecularWeight,CanonicalSMILES,IUPACName,HBondDonorCount,HBondAcceptorCount,RotatableBondCount,Complexity/JSON`).then(x=>x.json()),
+            fetchGHSFromPubChem(c)
+        ]).then(results => {
+            const d = results[1]; const ghsCodes = results[2];
+            if(!d.PropertyTable) return; const p=d.PropertyTable.Properties[0];
+            document.getElementById(`td_iupac${suf}`).innerText=p.IUPACName||"無"; document.getElementById(`td_formula${suf}`).innerText=p.MolecularFormula||"無"; document.getElementById(`td_weight${suf}`).innerText=p.MolecularWeight?p.MolecularWeight+" g/mol":"無";
+            if(isC) currentSmilesB=p.CanonicalSMILES||""; else currentSmilesA=p.CanonicalSMILES||"";
+            
+            let ghsHtml = '<h4 style="margin: 0 0 10px 0; color: var(--danger); width: 100%;">⚠️ GHS 危害標示 (PubChem 即時連線)</h4><div style="display:flex; flex-wrap:wrap; gap:8px;">';
+            if (ghsCodes.length > 0) {
+                ghsCodes.forEach(code => {
+                    const name = pubchemGhsNames[code] || code; const iconUrl = `https://pubchem.ncbi.nlm.nih.gov/images/ghs/${code}.svg`;
+                    ghsHtml += `<div class="ghs-badge"><img src="${iconUrl}" class="ghs-icon" alt="${name}"><span>${name}</span></div>`;
+                });
+            } else { ghsHtml += `<span style="color:var(--text-muted); font-size:13px;">PubChem 暫無收錄該物質之 GHS 資訊 (或屬無危害物質)</span>`; }
+            ghsHtml += '</div>'; document.getElementById(`ghsContainer${suf}`).innerHTML = `<div class="ghs-container">${ghsHtml}</div>`;
+
+            if(window.Recharts) {
+                const { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, Tooltip } = window.Recharts;
+                const data = [{s:'質量',A:Math.min(100,(p.MolecularWeight/500)*100)||0,r:p.MolecularWeight},{s:'H給',A:Math.min(100,(p.HBondDonorCount/10)*100)||0,r:p.HBondDonorCount},{s:'H受',A:Math.min(100,(p.HBondAcceptorCount/10)*100)||0,r:p.HBondAcceptorCount},{s:'旋轉鍵',A:Math.min(100,(p.RotatableBondCount/10)*100)||0,r:p.RotatableBondCount},{s:'複雜度',A:Math.min(100,(p.Complexity/500)*100)||0,r:p.Complexity}];
+                const col=suf==='A'?"#3498db":"#d81b60"; const TT=({active,payload})=>{if(active&&payload&&payload.length) return React.createElement('div',{style:{background:'#fff',padding:'5px',border:'1px solid #ccc'}},React.createElement('p',null,`${payload[0].payload.s}: ${payload[0].payload.r||0}`));return null;};
+                ReactDOM.render(React.createElement(ResponsiveContainer,{width:"100%",height:"100%"},React.createElement(RadarChart,{cx:"50%",cy:"50%",outerRadius:"70%",data},React.createElement(PolarGrid),React.createElement(PolarAngleAxis,{dataKey:"s",tick:{fontSize:11}}),React.createElement(PolarRadiusAxis,{angle:30,domain:[0,100],tick:false,axisLine:false}),React.createElement(Radar,{dataKey:"A",stroke:col,fill:col,fillOpacity:0.5}),React.createElement(Tooltip,{content:React.createElement(TT)}))), document.getElementById(`radarChart${suf}`));
+            }
+        }).catch(e=>{});
+    }
+    async function load3DAsync(cid, elId, ref) { const div=document.getElementById(elId); if(!window[ref]) window[ref]=$3Dmol.createViewer(div,{backgroundColor:'transparent'}); const v=window[ref]; v.clear(); const res=await fetch(`${PUBCHEM_API}/compound/cid/${cid}/record/SDF/?record_type=3d`); if(res.ok){v.addModel(await res.text(),"sdf"); v.setStyle({},{stick:{radius:0.15},sphere:{scale:0.3}}); v.zoomTo(); v.render(); setTimeout(()=>{v.resize();v.zoomTo();v.render();},150);} }
 </script>
 </body>
 </html>
